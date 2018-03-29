@@ -34,19 +34,6 @@ namespace VfpToSqlBulkCopy.Utility
 
             DataTable dataTable = Helper.GetOleDbDataTable(sourceConnectionName, selectCommandString);
 
-            // Deleted 
-            //DataTable dataTable = null;
-            //using (OleDbConnection sourceConnection = new OleDbConnection(Helper.GetConnectionString(sourceConnectionName)))
-            //{
-            //    using (OleDbCommand dbcmd = new OleDbCommand(selectCommandString,sourceConnection))
-            //    {
-            //        sourceConnection.Open();
-            //        dataTable = new DataTable();
-            //        dataTable.Load(dbcmd.ExecuteReader());
-            //        sourceConnection.Close();
-            //    }
-            //}
-
             using (SqlConnection destinationConnection = new SqlConnection(Helper.GetConnectionString(destinationConnectionName)))
             {
                 using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
@@ -59,6 +46,8 @@ namespace VfpToSqlBulkCopy.Utility
                     destinationConnection.Close();
                 }
             }
+
+            
         }
     }
 }

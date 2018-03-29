@@ -39,7 +39,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             Assert.AreEqual(actualRowCount, expectedRowCount);
 
             // Check handling of Deleted() 
-            int sqlDeletedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionName, getCountCommandString + String.Format(" WHERE {0} = 1",Constants.DILayer.DeletedColumnName)));
+            int sqlDeletedRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionName, getCountCommandString + String.Format(" WHERE {0} = 1",Constants.DILayer.DeletedColumnName)));
             Assert.AreEqual(sqlDeletedRowCount, vfpDeletedRowCount);
         }
 
