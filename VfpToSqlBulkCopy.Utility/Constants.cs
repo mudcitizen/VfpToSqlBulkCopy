@@ -17,5 +17,12 @@ namespace VfpToSqlBulkCopy.Utility
             public static String Column => "COLUMN_NAME";
             public static String DataType => "DATA_TYPE";
         }
+
+        public static class DILayer
+        {
+            public static String DeletedColumnName => "SqlDeleted";
+            public static String RecnoColumnName => "SqlRecno";
+
+        }
     }
 }

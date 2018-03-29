@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Experiments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestTableProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config">

@@ -42,7 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="DefaultCommandStringProvider.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="ICommandStringProvider.cs" />
     <Compile Include="OleDbColumnDefinition.cs" />
     <Compile Include="OleDbSchemaProvider.cs" />
     <Compile Include="TableProcessor.cs" />

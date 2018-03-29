@@ -21,27 +21,29 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             {
                 TestContext.WriteLine(kvp.Value.ToString());
             }
-            //using (OleDbConnection conn = new OleDbConnection(Helper.GetConnectionString(VfpConnectionName)))
-            //{
-            //    conn.Open();
-            //    DataTable schemaTable, dataTypes;
-            //    String[] restrictions = new String[] {null,null,"in_res",null};
+        }
 
-            //    schemaTable = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, restrictions);
-            //    dataTypes = conn.GetOleDbSchemaTable(OleDbSchemaGuid.DbInfoLiterals, null);
+        [TestMethod]
+        public void TestCommand()
+        {
+            String cmdStr = "SELECT GuestNum,ResNo,Level,IIF(EMPTY(Cancel),null,Cancel) as Cancel,IIF(DELETED(),1,0) AS SqlDeleted FROM IN_RES";
+            cmdStr = "select MSNUMB, MSTYPE, MSGNUM, MSRNUM, IIF(EMPTY(MSDATE),null,MSDATE) as MSDATE, MSTIME, MSUSER, IIF(EMPTY(MSCLDATE),null,MSCLDATE) as MSCLDATE, MSCLTIME, MSCLUSER, MSPRINT, MSTO, MSFLAG, MSNOTTYP, IIF(EMPTY(MSBEGIN),null,MSBEGIN) as MSBEGIN, MSDAY, MSBEGTIME, MSENDTIME, MSTXT, MSPRI, MSSTAT, MSIPADDR, MSAUTOCLS, IIF(DELETED(),1,0) AS SqlDeleted from IN_MSG";
+            
+            using (OleDbConnection conn = new OleDbConnection(Helper.GetConnectionString(VfpConnectionName)))
+            {
+                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
+                {
+                    conn.Open();
+                    DataTable dt;
+                    dt = new DataTable();
+                    dt.Load(cmd.ExecuteReader());
+                    conn.Close();
+                    TestContext.WriteLine("HH");
 
-            //    const String ColumnColumnName = "COLUMN_NAME";
-            //    const String DataTypeColumnName = "DATA_TYPE";
+                }
 
-            //    foreach (DataRow row in schemaTable.Rows)
-            //    {
-            //        OleDbType dbType = (OleDbType)row[DataTypeColumnName];
-            //        String s = String.Format("Column - {0} ; DataType - {1} ; DataTypeName - {2}", row[ColumnColumnName].ToString(), row[DataTypeColumnName].ToString(),dbType);
-            //        TestContext.WriteLine(s);
-            //    }
+            }
 
-            //    TestContext.WriteLine("whoo hoo");
-            //}
         }
 
     }
