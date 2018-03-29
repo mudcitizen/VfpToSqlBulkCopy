@@ -47,7 +47,22 @@ namespace VfpToSqlBulkCopy.Utility
                 }
             }
 
-            
+            const String recnoParm = "@recno";
+            dataTable = Helper.GetOleDbDataTable(sourceConnectionName, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
+            using (SqlConnection conn = new SqlConnection(Helper.GetConnectionString(destinationConnectionName)))
+            {
+                conn.Open();
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    String cmdStr = String.Format("UPDATE {0} SET {1} = 1 WHERE {2} = {3}", destinationTableName, Constants.DILayer.DeletedColumnName, Constants.DILayer.RecnoColumnName, recnoParm);
+                    using (SqlCommand cmd = new SqlCommand(cmdStr, conn))
+                    {
+                        cmd.Parameters.AddWithValue(recnoParm, row[0].ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                conn.Close();
+            }
         }
     }
 }
