@@ -14,8 +14,11 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public static String GetConnectionString(String connectionName)
         {
-            String connStr = ConfigurationManager.ConnectionStrings[connectionName].ToString();
-            return connStr;
+            ConnectionStringSettings css = ConfigurationManager.ConnectionStrings[connectionName];
+            if (css == null)
+                return null;
+            else
+                return css.ConnectionString;
         }
 
         public static Object GetOleDbScaler(String connectionName, string cmdStr)

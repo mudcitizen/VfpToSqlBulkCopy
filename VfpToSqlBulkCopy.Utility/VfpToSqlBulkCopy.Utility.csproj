@@ -50,6 +50,7 @@
     <Compile Include="TableProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UpdateDateCommandStringProvider.cs" />
+    <Compile Include="UploadLauncher.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -44,6 +44,14 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         }
 
         [TestMethod]
+        public void TestUploadOfTableWithDateFieldsThatAreReservedWords()
+        {
+            TableProcessor tp = new TableProcessor();
+            tp.Upload(VfpConnectionName, "SGIBKHDR", SqlConnectionName);
+            TestContext.WriteLine("TestUploadOfTableWithDateFieldsThatAreReservedWords complete");
+        }
+
+        [TestMethod]
         public void TestBasicCommandStringProvider()
         {
             const string tableName = "IN_MSG";

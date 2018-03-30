@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.OleDb;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,15 +29,24 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestWhatever()
         {
 
-            const String connName = SqlConnectionName;
-            ICommandStringProvider csp = new UpdateDateCommandStringProvider();
-            String s = csp.GetCommandString(connName, "IN_MSG");
-            if (!String.IsNullOrEmpty(s))
+            ConnectionStringSettings css = ConfigurationManager.ConnectionStrings["host"];
+            String s;
+            if (css == null)
             {
-                TestContext.WriteLine(s);
-                Helper.ExecuteSqlNonQuery(connName, s);
+                s = "Null boss";
             }
+            else
+            {
 
+                OleDbConnectionStringBuilder bldr = new OleDbConnectionStringBuilder(css.ConnectionString);
+                Object ds;
+                bldr.TryGetValue("Data Source", out ds);
+                s = String.Format("Name - {0} ; String - {1} ; DataSource - {2}",css.Name,css.ConnectionString,ds);
+
+
+
+            }
+            TestContext.WriteLine(s);
         }
 
     }

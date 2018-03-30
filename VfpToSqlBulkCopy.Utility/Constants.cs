@@ -38,5 +38,12 @@ namespace VfpToSqlBulkCopy.Utility
             public static String RecnoColumnName => "SqlRecno";
 
         }
+
+        public static class ConnectionNames
+        {
+            public static String Host => "Host";
+            public static String Sql => "Sql";
+            public static String POS => "POS";
+        }
     }
 }

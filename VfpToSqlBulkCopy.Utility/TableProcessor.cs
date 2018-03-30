@@ -15,18 +15,17 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName)
         {
-            Upload(sourceConnectionName, sourceTableName, destinationConnectionName, sourceTableName.Replace('-', '_'), new SelectCommandStringProvider());
+            Upload(sourceConnectionName, sourceTableName, destinationConnectionName, sourceTableName.Replace('-', '_'));
         }
 
 
-        public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName, String destinationTableName, ICommandStringProvider commandStringProvider)
+        public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName, String destinationTableName)
         {
 
             if (String.IsNullOrEmpty(destinationTableName))
                 destinationTableName = sourceTableName.Replace("-", "_");
 
-            if (commandStringProvider == null)
-                commandStringProvider = new SelectCommandStringProvider();
+            ICommandStringProvider commandStringProvider = new SelectCommandStringProvider();
 
             // Date Null Scrub
             // Deleted 
@@ -66,7 +65,7 @@ namespace VfpToSqlBulkCopy.Utility
 
                 #region NullDates
                 ICommandStringProvider csp = new UpdateDateCommandStringProvider();
-                String updateCmdStr = csp.GetCommandString(destinationConnectionName,destinationTableName);
+                String updateCmdStr = csp.GetCommandString(destinationConnectionName, destinationTableName);
                 if (!String.IsNullOrEmpty(updateCmdStr))
                 {
                     Helper.ExecuteSqlNonQuery(destinationConnectionName, updateCmdStr);
