@@ -17,6 +17,20 @@ namespace VfpToSqlBulkCopy.Utility
             public static String Column => "COLUMN_NAME";
             public static String DataType => "DATA_TYPE";
         }
+        public static class SqlTypeNames
+        {
+            public static String Date => "date";
+            public static String DateTime => "datetime";
+        }
+
+        /*
+         * SqlDateMinValue is BS.  Many of the types in System.Data.SqlTypes
+         * have a MinValue and MaxValue fields.  Eg SqlDateTime and SqlMoney
+         * 
+         * However, System.Data.SqlTypes doesn't have SqlDate.  All searches
+         * refer to DateTime.  Must be we are the only app that uses it :o)
+         */
+        public static String SqlDateMinValue => "1899-12-30";
 
         public static class DILayer
         {

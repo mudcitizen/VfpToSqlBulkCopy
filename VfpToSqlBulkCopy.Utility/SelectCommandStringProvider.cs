@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility
 {
-    public class DefaultCommandStringProvider : ICommandStringProvider
+    public class SelectCommandStringProvider : ICommandStringProvider
     {
         public string GetCommandString(string connectionName, string tableName)
         {

@@ -47,7 +47,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestBasicCommandStringProvider()
         {
             const string tableName = "IN_MSG";
-            ICommandStringProvider csp = new DefaultCommandStringProvider();
+            ICommandStringProvider csp = new SelectCommandStringProvider();
             String actual = csp.GetCommandString(VfpConnectionName, tableName);
             String upperActual = actual.ToUpper();
 

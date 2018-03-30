@@ -47,6 +47,21 @@ namespace VfpToSqlBulkCopy.Utility
             }
             return result;
         }
+        public static DataTable GetSqlDataTable(String connectionName, string cmdStr)
+        {
+            DataTable result = null;
+            using (SqlConnection conn = new SqlConnection(Helper.GetConnectionString(connectionName)))
+            {
+                using (SqlCommand cmd = new SqlCommand(cmdStr, conn))
+                {
+                    conn.Open();
+                    result = new DataTable();
+                    result.Load(cmd.ExecuteReader());
+                    conn.Close();
+                }
+            }
+            return result;
+        }
 
         public static Object GetSqlScaler(String connectionName, string cmdStr)
         {

@@ -15,7 +15,7 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName)
         {
-            Upload(sourceConnectionName, sourceTableName, destinationConnectionName, sourceTableName.Replace('-', '_'), new DefaultCommandStringProvider());
+            Upload(sourceConnectionName, sourceTableName, destinationConnectionName, sourceTableName.Replace('-', '_'), new SelectCommandStringProvider());
         }
 
 
@@ -26,7 +26,7 @@ namespace VfpToSqlBulkCopy.Utility
                 destinationTableName = sourceTableName.Replace("-", "_");
 
             if (commandStringProvider == null)
-                commandStringProvider = new DefaultCommandStringProvider();
+                commandStringProvider = new SelectCommandStringProvider();
 
             // Date Null Scrub
             // Deleted 
@@ -36,33 +36,48 @@ namespace VfpToSqlBulkCopy.Utility
 
             using (SqlConnection destinationConnection = new SqlConnection(Helper.GetConnectionString(destinationConnectionName)))
             {
+                destinationConnection.Open();
+
                 using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
                 {
-                    destinationConnection.Open();
                     DataTableReader dtReader = dataTable.CreateDataReader();
                     copier.DestinationTableName = destinationTableName;
                     copier.WriteToServer(dataTable);
                     dtReader.Close();
-                    destinationConnection.Close();
                 }
-            }
 
-            const String recnoParm = "@recno";
-            dataTable = Helper.GetOleDbDataTable(sourceConnectionName, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
-            using (SqlConnection conn = new SqlConnection(Helper.GetConnectionString(destinationConnectionName)))
-            {
-                conn.Open();
-                foreach (DataRow row in dataTable.Rows)
+                #region Update SqlDeleted
+                const String recnoParm = "@recno";
+                dataTable = Helper.GetOleDbDataTable(sourceConnectionName, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
+                if (dataTable.Rows.Count != 1)
                 {
-                    String cmdStr = String.Format("UPDATE {0} SET {1} = 1 WHERE {2} = {3}", destinationTableName, Constants.DILayer.DeletedColumnName, Constants.DILayer.RecnoColumnName, recnoParm);
-                    using (SqlCommand cmd = new SqlCommand(cmdStr, conn))
+                    foreach (DataRow row in dataTable.Rows)
                     {
-                        cmd.Parameters.AddWithValue(recnoParm, row[0].ToString());
-                        cmd.ExecuteNonQuery();
+                        String cmdStr = String.Format("UPDATE {0} SET {1} = 1 WHERE {2} = {3}", destinationTableName, Constants.DILayer.DeletedColumnName, Constants.DILayer.RecnoColumnName, recnoParm);
+                        using (SqlCommand cmd = new SqlCommand(cmdStr, destinationConnection))
+                        {
+                            cmd.Parameters.AddWithValue(recnoParm, row[0].ToString());
+                            cmd.ExecuteNonQuery();
+                        }
                     }
                 }
-                conn.Close();
+                #endregion
+
+
+                #region NullDates
+                ICommandStringProvider csp = new UpdateDateCommandStringProvider();
+                String updateCmdStr = csp.GetCommandString(destinationConnectionName,destinationTableName);
+                if (!String.IsNullOrEmpty(updateCmdStr))
+                {
+                    Helper.ExecuteSqlNonQuery(destinationConnectionName, updateCmdStr);
+                }
+                #endregion
+
+
+                destinationConnection.Close();
+
             }
+
         }
     }
 }

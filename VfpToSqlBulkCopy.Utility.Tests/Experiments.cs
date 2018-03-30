@@ -10,6 +10,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     public class Experiments
     {
         const String VfpConnectionName = "Host";
+        const String SqlConnectionName = "Sql";
 
         public TestContext TestContext { get; set; }
 
@@ -24,24 +25,16 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         }
 
         [TestMethod]
-        public void TestCommand()
+        public void TestWhatever()
         {
-            String cmdStr = "SELECT GuestNum,ResNo,Level,IIF(EMPTY(Cancel),null,Cancel) as Cancel,IIF(DELETED(),1,0) AS SqlDeleted FROM IN_RES";
-            cmdStr = "select MSNUMB, MSTYPE, MSGNUM, MSRNUM, IIF(EMPTY(MSDATE),null,MSDATE) as MSDATE, MSTIME, MSUSER, IIF(EMPTY(MSCLDATE),null,MSCLDATE) as MSCLDATE, MSCLTIME, MSCLUSER, MSPRINT, MSTO, MSFLAG, MSNOTTYP, IIF(EMPTY(MSBEGIN),null,MSBEGIN) as MSBEGIN, MSDAY, MSBEGTIME, MSENDTIME, MSTXT, MSPRI, MSSTAT, MSIPADDR, MSAUTOCLS, IIF(DELETED(),1,0) AS SqlDeleted from IN_MSG";
-            
-            using (OleDbConnection conn = new OleDbConnection(Helper.GetConnectionString(VfpConnectionName)))
+
+            const String connName = SqlConnectionName;
+            ICommandStringProvider csp = new UpdateDateCommandStringProvider();
+            String s = csp.GetCommandString(connName, "IN_MSG");
+            if (!String.IsNullOrEmpty(s))
             {
-                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
-                {
-                    conn.Open();
-                    DataTable dt;
-                    dt = new DataTable();
-                    dt.Load(cmd.ExecuteReader());
-                    conn.Close();
-                    TestContext.WriteLine("HH");
-
-                }
-
+                TestContext.WriteLine(s);
+                Helper.ExecuteSqlNonQuery(connName, s);
             }
 
         }
