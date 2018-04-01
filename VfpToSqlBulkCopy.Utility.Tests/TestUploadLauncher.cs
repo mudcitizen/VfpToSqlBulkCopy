@@ -35,24 +35,21 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         [TestMethod]
         public void TestEssexUpload()
         {
-
-
-            const String HostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=general;DELETED=False;";
+            const String HostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=machine;DELETED=False;";
             const String SqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
 
-            //Helper.ExecuteSqlNonQuery(SqlConnectionString, @"USE[master] RESTORE DATABASE[Essex_22_000211] FROM DISK = N'D:\Essex\Hostdema\Essex_22_000211.bak' WITH FILE = 1, NOUNLOAD, STATS = 5");
+            Helper.ExecuteSqlNonQuery(SqlConnectionString, @"USE[master] RESTORE DATABASE[Essex_22_000211] FROM DISK = N'D:\Essex\Hostdema\Essex_22_000211.bak' WITH FILE = 1, NOUNLOAD, STATS = 5");
 
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             connStrs.Add(Constants.ConnectionNames.Sql, SqlConnectionString);
             connStrs.Add(Constants.ConnectionNames.Host, HostConnectionString);
 
-            RestartParameter restartParm = new RestartParameter() { ConnectionName = Constants.ConnectionNames.Host, TableName = "IN_HRES" };
-            UploadLauncher ul = new UploadLauncher(connStrs,restartParm);
+            //RestartParameter restartParm = new RestartParameter() { ConnectionName = Constants.ConnectionNames.Host, TableName = "IN_HRES" };
+            UploadLauncher ul = new UploadLauncher(connStrs);
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
             ul.Launch();
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
             TestContext.WriteLine("Done");
-
         }
 
 

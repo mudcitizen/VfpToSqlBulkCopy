@@ -14,6 +14,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         const String VfpConnectionName = "Host";
         const String SqlConnectionName = "Sql";
 
+        const String EssexHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=general;DELETED=False;";
+        const String EssexSqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
+
         public TestContext TestContext { get; set; }
 
 
@@ -62,6 +65,13 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             }
 
 
+        }
+
+        [TestMethod]
+        public void TestFung()
+        {
+            TableProcessor tp = new TableProcessor();
+            tp.Upload(EssexHostConnectionString, "FUNG", EssexSqlConnectionString);
         }
 
         void UploadTable(String sourceTableName, String HostConnectionString,String SqlConnectionString)
