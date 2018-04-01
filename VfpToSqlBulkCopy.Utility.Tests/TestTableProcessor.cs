@@ -30,7 +30,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             Assert.AreEqual(0, (int)Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
 
             // Import from VFP
-            TableProcessor tp = new TableProcessor();
+            TableUploader tp = new TableUploader();
             tp.Upload(VfpConnectionString, tableName, SqlConnectionString);
 
             // Make sure rowcounts are correct
@@ -46,7 +46,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         [TestMethod]
         public void TestUploadOfTableWithDateFieldsThatAreReservedWords()
         {
-            TableProcessor tp = new TableProcessor();
+            TableUploader tp = new TableUploader();
             tp.Upload(VfpConnectionString, "SGIBKHDR", SqlConnectionString);
             TestContext.WriteLine("TestUploadOfTableWithDateFieldsThatAreReservedWords complete");
         }

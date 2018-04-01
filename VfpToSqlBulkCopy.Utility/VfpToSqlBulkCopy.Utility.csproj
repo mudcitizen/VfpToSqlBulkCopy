@@ -51,7 +51,7 @@
     <Compile Include="OleDbColumnDefinition.cs" />
     <Compile Include="OleDbSchemaProvider.cs" />
     <Compile Include="TableNameProvider.cs" />
-    <Compile Include="TableProcessor.cs" />
+    <Compile Include="TableUploader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UpdateDateCommandStringProvider.cs" />
     <Compile Include="UploadLauncher.cs" />

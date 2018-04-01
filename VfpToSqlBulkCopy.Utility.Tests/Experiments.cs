@@ -70,7 +70,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         [TestMethod]
         public void TestFung()
         {
-            TableProcessor tp = new TableProcessor();
+            TableUploader tp = new TableUploader();
             tp.Upload(EssexHostConnectionString, "FUNG", EssexSqlConnectionString);
         }
 

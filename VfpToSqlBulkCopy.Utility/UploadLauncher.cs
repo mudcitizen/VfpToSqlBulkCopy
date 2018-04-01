@@ -61,7 +61,7 @@ namespace VfpToSqlBulkCopy.Utility
         public void Launch()
         {
 
-            TableProcessor tableProcessor = new TableProcessor();
+            TableUploader tableProcessor = new TableUploader();
             ITableNameProvider tableNameProvider;
             if (RestartParm == null)
                 tableNameProvider = new TableNameProvider(HostConnectionString);

@@ -11,7 +11,7 @@ using System.Data.SqlClient;
 
 namespace VfpToSqlBulkCopy.Utility
 {
-    public class TableProcessor
+    public class TableUploader
     {
         private readonly int BatchSize = 25000;
         public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString)
