@@ -8,11 +8,11 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class SelectCommandStringProvider : ICommandStringProvider
     {
-        public string GetCommandString(string connectionName, string tableName)
+        public string GetCommandString(string connectionString, string tableName)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("select ");
-            Dictionary<String, OleDbColumnDefinition> schema = new OleDbSchemaProvider().GetSchema(connectionName, tableName);
+            Dictionary<String, OleDbColumnDefinition> schema = new OleDbSchemaProvider().GetSchema(connectionString, tableName);
             String comma = String.Empty;
             foreach (KeyValuePair<String, OleDbColumnDefinition> kvp in schema)
             {

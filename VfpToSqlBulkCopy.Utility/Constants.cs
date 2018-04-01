@@ -41,9 +41,10 @@ namespace VfpToSqlBulkCopy.Utility
 
         public static class ConnectionNames
         {
-            public static String Host => "Host";
-            public static String Sql => "Sql";
+            public static String Host => "HOST";
+            public static String Sql => "SQL";
             public static String POS => "POS";
         }
+
     }
 }

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility
 {
-    public interface ICommandStringProvider 
+    public interface ITableNameProvider
     {
-        String GetCommandString(String sourceConnectionString, String sourceTableName);
+        IEnumerable<String> GetTables(String connectionName, String connectionString);
     }
 }

@@ -13,13 +13,13 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class TableProcessor
     {
-        public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName)
+        public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString)
         {
-            Upload(sourceConnectionName, sourceTableName, destinationConnectionName, sourceTableName.Replace('-', '_'));
+            Upload(sourceConnectionString, sourceTableName, destinationConnectionString, sourceTableName.Replace('-', '_'));
         }
 
 
-        public void Upload(String sourceConnectionName, String sourceTableName, String destinationConnectionName, String destinationTableName)
+        public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
         {
 
             if (String.IsNullOrEmpty(destinationTableName))
@@ -29,17 +29,19 @@ namespace VfpToSqlBulkCopy.Utility
 
             // Date Null Scrub
             // Deleted 
-            String selectCommandString = commandStringProvider.GetCommandString(sourceConnectionName, sourceTableName);
+            String selectCommandString = commandStringProvider.GetCommandString(sourceConnectionString, sourceTableName);
 
-            DataTable dataTable = Helper.GetOleDbDataTable(sourceConnectionName, selectCommandString);
+            DataTable dataTable = Helper.GetOleDbDataTable(sourceConnectionString, selectCommandString);
 
-            using (SqlConnection destinationConnection = new SqlConnection(Helper.GetConnectionString(destinationConnectionName)))
+            using (SqlConnection destinationConnection = new SqlConnection(destinationConnectionString))
             {
                 destinationConnection.Open();
 
                 using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
                 {
                     DataTableReader dtReader = dataTable.CreateDataReader();
+                    copier.BulkCopyTimeout = 0;
+                    copier.BatchSize = 10000;
                     copier.DestinationTableName = destinationTableName;
                     copier.WriteToServer(dataTable);
                     dtReader.Close();
@@ -47,7 +49,7 @@ namespace VfpToSqlBulkCopy.Utility
 
                 #region Update SqlDeleted
                 const String recnoParm = "@recno";
-                dataTable = Helper.GetOleDbDataTable(sourceConnectionName, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
+                dataTable = Helper.GetOleDbDataTable(sourceConnectionString, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
                 if (dataTable.Rows.Count != 1)
                 {
                     foreach (DataRow row in dataTable.Rows)
@@ -65,10 +67,10 @@ namespace VfpToSqlBulkCopy.Utility
 
                 #region NullDates
                 ICommandStringProvider csp = new UpdateDateCommandStringProvider();
-                String updateCmdStr = csp.GetCommandString(destinationConnectionName, destinationTableName);
+                String updateCmdStr = csp.GetCommandString(destinationConnectionString, destinationTableName);
                 if (!String.IsNullOrEmpty(updateCmdStr))
                 {
-                    Helper.ExecuteSqlNonQuery(destinationConnectionName, updateCmdStr);
+                    Helper.ExecuteSqlNonQuery(destinationConnectionString, updateCmdStr);
                 }
                 #endregion
 

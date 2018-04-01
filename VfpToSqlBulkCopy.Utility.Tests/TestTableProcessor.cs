@@ -8,8 +8,8 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     [TestClass]
     public class TestTableProcessor
     {
-        const String VfpConnectionName = "Host";
-        const String SqlConnectionName = "Sql";
+        const String VfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;";
+        const String SqlConnectionString = @"Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
 
         public TestContext TestContext { get; set; }
 
@@ -19,27 +19,27 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         {
             const String tableName = "IN_MSG";
             String getCountCommandString = "SELECT COUNT(*) FROM " + tableName;
-            int vfpRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionName, getCountCommandString));
-            int vfpNonDeletedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionName, getCountCommandString + " WHERE NOT DELETED()"));
-            int vfpDeletedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionName, getCountCommandString + " WHERE DELETED()"));
+            int vfpRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionString, getCountCommandString));
+            int vfpNonDeletedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionString, getCountCommandString + " WHERE NOT DELETED()"));
+            int vfpDeletedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionString, getCountCommandString + " WHERE DELETED()"));
             Assert.IsTrue(vfpNonDeletedRowCount > 0, "Expected 1 or more non-deleted rows");
             Assert.IsTrue(vfpDeletedRowCount > 0, "Expected 1 or more deleted rows");
 
             // Clear out the SQL table
-            Helper.ExecuteSqlNonQuery(SqlConnectionName, "DELETE FROM " + tableName);
-            Assert.AreEqual(0, (int)Helper.GetSqlScaler(SqlConnectionName, getCountCommandString));
+            Helper.ExecuteSqlNonQuery(SqlConnectionString, "DELETE FROM " + tableName);
+            Assert.AreEqual(0, (int)Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
 
             // Import from VFP
             TableProcessor tp = new TableProcessor();
-            tp.Upload(VfpConnectionName, tableName, SqlConnectionName);
+            tp.Upload(VfpConnectionString, tableName, SqlConnectionString);
 
             // Make sure rowcounts are correct
-            int actualRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionName, getCountCommandString));
-            int expectedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionName, getCountCommandString));
+            int actualRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
+            int expectedRowCount = Convert.ToInt32(Helper.GetOleDbScaler(VfpConnectionString, getCountCommandString));
             Assert.AreEqual(actualRowCount, expectedRowCount);
 
             // Check handling of Deleted() 
-            int sqlDeletedRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionName, getCountCommandString + String.Format(" WHERE {0} = 1",Constants.DILayer.DeletedColumnName)));
+            int sqlDeletedRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, getCountCommandString + String.Format(" WHERE {0} = 1",Constants.DILayer.DeletedColumnName)));
             Assert.AreEqual(sqlDeletedRowCount, vfpDeletedRowCount);
         }
 
@@ -47,7 +47,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestUploadOfTableWithDateFieldsThatAreReservedWords()
         {
             TableProcessor tp = new TableProcessor();
-            tp.Upload(VfpConnectionName, "SGIBKHDR", SqlConnectionName);
+            tp.Upload(VfpConnectionString, "SGIBKHDR", SqlConnectionString);
             TestContext.WriteLine("TestUploadOfTableWithDateFieldsThatAreReservedWords complete");
         }
 
@@ -56,13 +56,13 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         {
             const string tableName = "IN_MSG";
             ICommandStringProvider csp = new SelectCommandStringProvider();
-            String actual = csp.GetCommandString(VfpConnectionName, tableName);
+            String actual = csp.GetCommandString(VfpConnectionString, tableName);
             String upperActual = actual.ToUpper();
 
             Assert.IsTrue(upperActual.StartsWith("SELECT "));
             Assert.IsTrue(upperActual.Replace(" ",String.Empty).EndsWith("FROM"+tableName));
 
-            Dictionary<String, OleDbColumnDefinition> schema = new OleDbSchemaProvider().GetSchema(VfpConnectionName, tableName);
+            Dictionary<String, OleDbColumnDefinition> schema = new OleDbSchemaProvider().GetSchema(VfpConnectionString, tableName);
 
             foreach (KeyValuePair<String, OleDbColumnDefinition> kvp in schema)
             {
@@ -72,7 +72,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             // Can we run it?  Turns out - we can't.  VFP raises Error # 1890
             // if you issued SELECT IIF(EMPTY(mscldate),null,mscldate) FROM in_msg
             // on the Laptop
-            DataTable dt = Helper.GetOleDbDataTable(VfpConnectionName, actual);
+            DataTable dt = Helper.GetOleDbDataTable(VfpConnectionString, actual);
 
             TestContext.WriteLine(actual);
            

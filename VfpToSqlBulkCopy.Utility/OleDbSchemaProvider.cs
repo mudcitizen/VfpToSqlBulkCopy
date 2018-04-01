@@ -7,10 +7,10 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class OleDbSchemaProvider
     {
-        public Dictionary<String, OleDbColumnDefinition> GetSchema(String connectionName, String tableName)
+        public Dictionary<String, OleDbColumnDefinition> GetSchema(String connectionString, String tableName)
         {
             Dictionary<String, OleDbColumnDefinition> schema = new Dictionary<String, OleDbColumnDefinition>();
-            using (OleDbConnection conn = new OleDbConnection(Helper.GetConnectionString(connectionName)))
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
                 conn.Open();
                 String[] restrictions = new String[] { null, null, tableName, null };

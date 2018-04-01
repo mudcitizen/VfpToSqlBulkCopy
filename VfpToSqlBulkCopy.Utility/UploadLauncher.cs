@@ -14,72 +14,76 @@ namespace VfpToSqlBulkCopy.Utility
     public class UploadLauncher
     {
 
-        public void Launch()
+        IDictionary<String, String> ConnectionStrings;
+        String SqlConnectionString;
+        String HostConnectionString;
+        RestartParameter RestartParm;
+
+
+        public UploadLauncher(IDictionary<String, String> connStrs) : this(connStrs, null) { }
+
+        public UploadLauncher(IDictionary<String, String> connStrs, RestartParameter restartDetails)
         {
-            IList<String> requiredConnectionNames = new List<String>() { Constants.ConnectionNames.Host, Constants.ConnectionNames.Sql };
+            ConnectionStrings = new Dictionary<String, String>();
+            IList<String> connectionNames = new List<String>() { Constants.ConnectionNames.Host.ToUpper(), Constants.ConnectionNames.POS.ToUpper(), Constants.ConnectionNames.Sql.ToUpper() };
+            foreach (KeyValuePair<String, String> kvp in connStrs)
+            {
+                String key = kvp.Key.ToUpper();
+                if (connectionNames.Contains(key))
+                    ConnectionStrings.Add(key, kvp.Value);
+            }
+
+            IList<String> requiredConnectionNames = new List<String>() { Constants.ConnectionNames.Host.ToUpper(), Constants.ConnectionNames.Sql.ToUpper() };
             foreach (String connName in requiredConnectionNames)
             {
-                if (ConfigurationManager.ConnectionStrings[connName] == null)
+                if (!ConnectionStrings.ContainsKey(connName))
                 {
                     throw new ApplicationException("No connection string found for connection name " + connName);
                 }
             }
 
-            IList<String> vfpConnectionNames = new List<String> { Constants.ConnectionNames.Host };
-            if (Helper.GetConnectionString(Constants.ConnectionNames.POS) == null)
-                vfpConnectionNames.Add(Constants.ConnectionNames.POS);
-
-            TableProcessor tableProcessor = new TableProcessor();
-
-            // TODO - Find a better way of logging progres..... 
-            foreach (String vfpConnectionName in vfpConnectionNames)
+            foreach (KeyValuePair<String, String> kvp in ConnectionStrings)
             {
-                IEnumerable<String> tableNames = GetTables(vfpConnectionName);
-                foreach (String tableName in tableNames)
+                if (kvp.Key.Equals(Constants.ConnectionNames.Sql, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    String msg = String.Format("{0} - {1}",DateTime.Now.ToShortTimeString(), tableName);
-                    Debug.WriteLine(msg);
-                    tableProcessor.Upload(vfpConnectionName, tableName, Constants.ConnectionNames.Sql, tableName.Replace('-', '_'));
+                    SqlConnectionString = kvp.Value;
                 }
-
+                if (kvp.Key.Equals(Constants.ConnectionNames.Host, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    HostConnectionString = kvp.Value;
+                }
             }
+
+            RestartParm = restartDetails;
 
         }
 
-        IEnumerable<String> GetTables(String connectionName)
+        public void Launch()
         {
-            IList<String> tables = new List<String>();
-            String connStr = Helper.GetConnectionString(connectionName);
 
-            if (connStr != null)
+            TableProcessor tableProcessor = new TableProcessor();
+            ITableNameProvider tableNameProvider;
+            if (RestartParm == null)
+                tableNameProvider = new TableNameProvider(HostConnectionString);
+            else
+                tableNameProvider = new TableNameProvider(HostConnectionString,RestartParm.SatisfiesFilter);
+
+            foreach (KeyValuePair<String, String> kvp in ConnectionStrings)
             {
-
-                String cmdStr = String.Format("SELECT TABLE FROM DITABLE WHERE UPPER(ClassName) NOT LIKE 'V%' AND IndxDbf LIKE '{0}%' ORDER BY TABLE", connectionName == Constants.ConnectionNames.Host ? 'I' : 'P');
-                DataTable dt = Helper.GetOleDbDataTable(Constants.ConnectionNames.Host, cmdStr);
-
-                OleDbConnectionStringBuilder bldr = new OleDbConnectionStringBuilder(Helper.GetConnectionString(connectionName));
-                Object obj = null;
-                bldr.TryGetValue("Data Source", out obj);
-
-                if (obj == null)
-                    throw new ApplicationException("No Data Source for connection name " + connectionName);
-
-                String directoryName = obj.ToString();
-
-                if (!Directory.Exists(directoryName))
-                    throw new ApplicationException("Data Source does not exist for connection name " + connectionName);
-
-                // TODO Ensure connectionString has DELETED=False
-                foreach (DataRow row in dt.Rows)
+                if (!kvp.Key.Equals(Constants.ConnectionNames.Sql, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    String tableName = row[0].ToString().Trim();
-                    String fileName = Path.Combine(directoryName, tableName + ".DBF");
-                    if (File.Exists(fileName))
-                        tables.Add(tableName);
+                    // TODO - Find a better way of logging progres..... 
+                    IEnumerable<String> tableNames = tableNameProvider.GetTables(kvp.Key, kvp.Value);
+                    foreach (String tableName in tableNames)
+                    {
+                        String msg = String.Format("{0} - {1} - Begin", DateTime.Now.ToShortTimeString(), tableName);
+                        Debug.WriteLine(msg);
+                        tableProcessor.Upload(kvp.Value, tableName, SqlConnectionString, tableName.Replace('-', '_'));
+                        msg = String.Format("{0} - {1} - End", DateTime.Now.ToShortTimeString(), tableName);
+                        Debug.WriteLine(msg);
+                    }
                 }
             }
-
-            return tables;
         }
     }
 
