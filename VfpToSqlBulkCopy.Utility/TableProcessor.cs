@@ -13,6 +13,7 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class TableProcessor
     {
+        private readonly int BatchSize = 25000;
         public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString)
         {
             Upload(sourceConnectionString, sourceTableName, destinationConnectionString, sourceTableName.Replace('-', '_'));
@@ -25,27 +26,49 @@ namespace VfpToSqlBulkCopy.Utility
             if (String.IsNullOrEmpty(destinationTableName))
                 destinationTableName = sourceTableName.Replace("-", "_");
 
-            ICommandStringProvider commandStringProvider = new SelectCommandStringProvider();
+            int recordCount = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, "SELECT COUNT(*) FROM " + sourceTableName));
 
-            // Date Null Scrub
-            // Deleted 
-            String selectCommandString = commandStringProvider.GetCommandString(sourceConnectionString, sourceTableName);
-
-            DataTable dataTable = Helper.GetOleDbDataTable(sourceConnectionString, selectCommandString);
+            DataTable dataTable = null;
 
             using (SqlConnection destinationConnection = new SqlConnection(destinationConnectionString))
             {
                 destinationConnection.Open();
 
-                using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
+                #region Upload
+                using (OleDbConnection sourceConnection = new OleDbConnection(sourceConnectionString))
                 {
-                    DataTableReader dtReader = dataTable.CreateDataReader();
-                    copier.BulkCopyTimeout = 0;
-                    copier.BatchSize = 10000;
-                    copier.DestinationTableName = destinationTableName;
-                    copier.WriteToServer(dataTable);
-                    dtReader.Close();
+                    sourceConnection.Open();
+
+                    int minRecno, maxRecno, recsUploaded;
+                    recsUploaded = 0;
+
+                    while (true)
+                    {
+                        minRecno = recsUploaded;
+                        maxRecno = minRecno + BatchSize;
+
+                        // Pull rows from VFP
+                        String cmdStr = String.Format("SELECT * FROM {0} WHERE RECNO() > {1} AND RECNO() <= {2}", sourceTableName, Convert.ToString(minRecno), Convert.ToString(maxRecno));
+                        dataTable = Helper.GetOleDbDataTable(sourceConnectionString, cmdStr);
+                        recsUploaded = recsUploaded + dataTable.Rows.Count;
+
+                        // Push rows to SQL 
+                        using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
+                        {
+                            DataTableReader dtReader = dataTable.CreateDataReader();
+                            copier.BulkCopyTimeout = 0;
+                            copier.DestinationTableName = destinationTableName;
+                            copier.WriteToServer(dataTable);
+                            dtReader.Close();
+                        }
+
+                        if (recsUploaded >= recordCount)
+                            break;
+                    }
+
+                    sourceConnection.Close();
                 }
+                #endregion
 
                 #region Update SqlDeleted
                 const String recnoParm = "@recno";
@@ -64,7 +87,6 @@ namespace VfpToSqlBulkCopy.Utility
                 }
                 #endregion
 
-
                 #region NullDates
                 ICommandStringProvider csp = new UpdateDateCommandStringProvider();
                 String updateCmdStr = csp.GetCommandString(destinationConnectionString, destinationTableName);
@@ -80,5 +102,6 @@ namespace VfpToSqlBulkCopy.Utility
             }
 
         }
+
     }
 }
