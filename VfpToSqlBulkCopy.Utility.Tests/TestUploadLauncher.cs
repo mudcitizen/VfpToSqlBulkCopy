@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,6 +8,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     [TestClass]
     public class TestUploadLauncher
     {
+        String LogFileName;
         const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;";
         const String LaptopPosConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vpos;Collating Sequence=general;DELETED=False;";
         const String LaptopSqlConnectionString = @"Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
@@ -46,6 +48,10 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             //RestartParameter restartParm = new RestartParameter() { ConnectionName = Constants.ConnectionNames.Host, TableName = "IN_HRES" };
             UploadLauncher ul = new UploadLauncher(connStrs);
+            LogFileName = "Essex_Upload.Log";
+            if (File.Exists(LogFileName))
+                File.Delete(LogFileName);
+
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
             ul.TableUploader.TableUploadBegin += HandleTableUploadBegin;
             ul.TableUploader.TableUploadEnd += HandleTableUploadEnd;
@@ -64,7 +70,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             WriteBoth(String.Format("End - " + args.ToString()));
         }
 
-        public void HandleTableUploadError(Object sender, TableUploadErrorEventArgs args)
+        private void HandleTableUploadError(Object sender, TableUploadErrorEventArgs args)
         {
             WriteBoth(String.Format("End - " + args.ToString()));
             WriteBoth(args.Exception.ToString());
@@ -75,7 +81,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             String s = DateTime.Now.ToLongTimeString() + " " + txt;
             System.Diagnostics.Debug.WriteLine(s);
             TestContext.WriteLine(s);
-            System.IO.File.AppendAllText("Upload.Log", txt);
+            System.IO.File.AppendAllText(LogFileName, txt + Environment.NewLine);
         }
     }
 }
