@@ -47,11 +47,35 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             //RestartParameter restartParm = new RestartParameter() { ConnectionName = Constants.ConnectionNames.Host, TableName = "IN_HRES" };
             UploadLauncher ul = new UploadLauncher(connStrs);
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
+            ul.TableUploader.TableUploadBegin += HandleTableUploadBegin;
+            ul.TableUploader.TableUploadEnd += HandleTableUploadEnd;
+            ul.TableUploader.TableUploadError += HandleTableUploadError;
             ul.Launch();
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
             TestContext.WriteLine("Done");
         }
 
+        private void HandleTableUploadBegin(Object sender, TableUploadBeginEventArgs args)
+        {
+            WriteBoth(String.Format("Begin - " + args.ToString()));
+        }
+        private void HandleTableUploadEnd(Object sender, TableUploadEndEventArgs args)
+        {
+            WriteBoth(String.Format("End - " + args.ToString()));
+        }
 
+        public void HandleTableUploadError(Object sender, TableUploadErrorEventArgs args)
+        {
+            WriteBoth(String.Format("End - " + args.ToString()));
+            WriteBoth(args.Exception.ToString());
+        }
+
+        private void WriteBoth(String txt)
+        {
+            String s = DateTime.Now.ToLongTimeString() + " " + txt;
+            System.Diagnostics.Debug.WriteLine(s);
+            TestContext.WriteLine(s);
+            System.IO.File.AppendAllText("Upload.Log", txt);
+        }
     }
 }

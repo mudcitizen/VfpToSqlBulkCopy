@@ -14,14 +14,32 @@ namespace VfpToSqlBulkCopy.Utility
     public class TableUploader
     {
         private readonly int BatchSize = 25000;
+
+        public event EventHandler<TableUploadBeginEventArgs> TableUploadBegin;
+        public event EventHandler<TableUploadEndEventArgs> TableUploadEnd;
+        public event EventHandler<TableUploadErrorEventArgs> TableUploadError;
+
         public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString)
         {
             Upload(sourceConnectionString, sourceTableName, destinationConnectionString, sourceTableName.Replace('-', '_'));
         }
 
-
         public void Upload(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
         {
+            OnTableUploadBegin(sourceTableName);
+            try
+            {
+                Process(sourceConnectionString, sourceTableName, destinationConnectionString, destinationTableName);
+            }
+            catch (Exception ex)
+            {
+                OnTableUploadError(sourceTableName, ex);
+            }
+            OnTableUploadEnd(sourceTableName);
+        }
+
+        private void Process(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
+        { 
 
             if (String.IsNullOrEmpty(destinationTableName))
                 destinationTableName = sourceTableName.Replace("-", "_");
@@ -96,12 +114,42 @@ namespace VfpToSqlBulkCopy.Utility
                 }
                 #endregion
 
-
                 destinationConnection.Close();
-
             }
 
         }
+
+        #region EventPublishers
+        protected virtual void OnTableUploadBegin(String tableName)
+        {
+            EventHandler<TableUploadBeginEventArgs> handler = TableUploadBegin;
+            if (handler != null)
+            {
+                TableUploadBeginEventArgs args = new TableUploadBeginEventArgs(tableName);
+                handler(this, args);
+            }
+        }
+        protected virtual void OnTableUploadEnd(String tableName)
+        {
+            EventHandler<TableUploadEndEventArgs> handler = TableUploadEnd;
+            if (handler != null)
+            {
+                TableUploadEndEventArgs args = new TableUploadEndEventArgs(tableName);
+                handler(this, args);
+            }
+        }
+
+        protected virtual void OnTableUploadError(String tableName, Exception exception)
+        {
+            EventHandler<TableUploadErrorEventArgs> handler = TableUploadError;
+            if (handler != null)
+            {
+                TableUploadErrorEventArgs args = new TableUploadErrorEventArgs(tableName, exception);
+                handler(this, args);
+            }
+        }
+
+        #endregion
 
     }
 }
