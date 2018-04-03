@@ -23,15 +23,12 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             connStrs.Add(Constants.ConnectionNames.Sql, LaptopSqlConnectionString);
-            connStrs.Add(Constants.ConnectionNames.Host, LaptopHostConnectionString);
-            connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
+            connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;");
+            //connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
 
-            //RestartDetails restartDetails = new RestartDetails() { ConnectionName = Constants.ConnectionNames.POS, TableName = "PSDRLOG" };
-            UploadLauncher ul = new UploadLauncher(connStrs,null);
-            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
-            ul.Launch();
-            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
-            TestContext.WriteLine("Done");
+           UploadLauncher ul = new UploadLauncher(connStrs,null);
+            LogFileName = "Laptop_Upload.Log";
+            RunUploadLauncher(ul);
 
         }
         [TestMethod]
@@ -47,18 +44,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             connStrs.Add(Constants.ConnectionNames.Host, HostConnectionString);
 
             //RestartParameter restartParm = new RestartParameter() { ConnectionName = Constants.ConnectionNames.Host, TableName = "IN_HRES" };
-            UploadLauncher ul = new UploadLauncher(connStrs);
             LogFileName = "Essex_Upload.Log";
-            if (File.Exists(LogFileName))
-                File.Delete(LogFileName);
-
-            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
-            ul.TableUploader.TableUploadBegin += HandleTableUploadBegin;
-            ul.TableUploader.TableUploadEnd += HandleTableUploadEnd;
-            ul.TableUploader.TableUploadError += HandleTableUploadError;
-            ul.Launch();
-            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
-            TestContext.WriteLine("Done");
+            UploadLauncher ul = new UploadLauncher(connStrs);
+            RunUploadLauncher(ul);
         }
 
         private void HandleTableUploadBegin(Object sender, TableUploadBeginEventArgs args)
@@ -82,6 +70,21 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             System.Diagnostics.Debug.WriteLine(s);
             TestContext.WriteLine(s);
             System.IO.File.AppendAllText(LogFileName, txt + Environment.NewLine);
+        }
+
+        private void RunUploadLauncher(UploadLauncher uploadLauncer)
+        {
+            if (File.Exists(LogFileName))
+                File.Delete(LogFileName);
+
+            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
+            uploadLauncer.TableUploader.TableUploadBegin += HandleTableUploadBegin;
+            uploadLauncer.TableUploader.TableUploadEnd += HandleTableUploadEnd;
+            uploadLauncer.TableUploader.TableUploadError += HandleTableUploadError;
+            uploadLauncer.Launch();
+            TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
+            TestContext.WriteLine("Done");
+
         }
     }
 }

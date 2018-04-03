@@ -14,6 +14,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         const String VfpConnectionName = "Host";
         const String SqlConnectionName = "Sql";
 
+        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=d:\vfptosql\vhost;Collating Sequence=general;DELETED=False;";
+
+
         const String EssexHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=general;DELETED=False;";
         const String EssexSqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
 
@@ -45,95 +48,52 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             TestContext.WriteLine(String.Format("GreaterOrEqual - {0}", greaterOrEqual));
         }
 
-        [TestMethod]
-        public void TestBatch()
-        {
-
-            const String HostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=general;DELETED=False;";
-            const String SqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
-
-            const String restoreSqlDb = @"USE [master] RESTORE DATABASE [Essex_22_000211] FROM  DISK = N'D:\ESSEX\HOSTDEMA\Essex_22_000211.bak' WITH  FILE = 1,  NOUNLOAD,  STATS = 5";
-            Helper.ExecuteSqlNonQuery(SqlConnectionString, restoreSqlDb);
-
-
-            ITableNameProvider tableNameProvider = new TableNameProvider(HostConnectionString);
-            IEnumerable<String> tableNames = tableNameProvider.GetTables(Constants.ConnectionNames.Host, HostConnectionString);
-
-            foreach (String tableName in tableNames)
-            {
-                UploadTable(tableName,HostConnectionString,SqlConnectionString);
-            }
-
-
-        }
 
         [TestMethod]
-        public void TestFung()
-        {
-            TableUploader tp = new TableUploader();
-            tp.Upload(EssexHostConnectionString, "FUNG", EssexSqlConnectionString);
-        }
-
-        void UploadTable(String sourceTableName, String HostConnectionString,String SqlConnectionString)
+        public void TestDataTableWithNullChrInMemo()
         {
 
-            String destinationTableName = sourceTableName.Trim().ToUpper().Replace('-', '_');
-            Helper.ExecuteSqlNonQuery(SqlConnectionString, "delete from " + destinationTableName);
+            const String sqlConnectionString = @"Data Source=(local);Initial Catalog=test;Integrated Security=True";
 
-            const int batchSize = 50000;
-            int recordCount = Convert.ToInt32(Helper.GetOleDbScaler(HostConnectionString, "SELECT COUNT(*) FROM " + sourceTableName));
-
-
-            WriteBoth("UploadTable - " + sourceTableName + " - Begin");
-            using (SqlConnection destinationConnection = new SqlConnection(SqlConnectionString))
+            String cmdStr = "SELECT RECNO() as RecNo, Background,len(background) FROM IN_WATRM";
+            const String vfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;NULL=YES";
+            DataTable result = null;
+            using (OleDbConnection conn = new OleDbConnection(vfpConnectionString))
             {
-                destinationConnection.Open();
-
-                using (OleDbConnection sourceConnection = new OleDbConnection(HostConnectionString))
+                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
                 {
-                    sourceConnection.Open();
-
-                    int minRecno, maxRecno, recsUploaded;
-                    recsUploaded = 0;
-
-                    DataTable dataTable = null;
-                    while (true)
+                    conn.Open();
+                    result = new DataTable();
+                    result.Load(cmd.ExecuteReader());
+                    foreach (DataRow row in result.Rows)
                     {
-                        minRecno = recsUploaded;
-                        maxRecno = minRecno + batchSize;
-
-                        // Pull rows from VFP
-                        String cmdStr = String.Format("SELECT * FROM {0} WHERE RECNO() > {1} AND RECNO() <= {2}", sourceTableName, Convert.ToString(minRecno), Convert.ToString(maxRecno));
-                        dataTable = Helper.GetOleDbDataTable(HostConnectionString, cmdStr);
-                        recsUploaded = recsUploaded + dataTable.Rows.Count;
-
-                        // Push rows to SQL 
-                        using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
+                        String insertCmdStr = "insert into test (background) values (@back)";
+                        using (SqlConnection sqlConn = new SqlConnection(sqlConnectionString))
                         {
-                            DataTableReader dtReader = dataTable.CreateDataReader();
-                            copier.BulkCopyTimeout = 0;
-                            copier.DestinationTableName = destinationTableName;
-                            copier.WriteToServer(dataTable);
-                            dtReader.Close();
+                            sqlConn.Open();
+                            using (SqlCommand insertCmd = new SqlCommand(insertCmdStr, sqlConn))
+                            {
+                                int strLen = row[1].ToString().Length;
+                                String bkgrnd = row[1].ToString();
+                                int bkgrndLen = bkgrnd.Length;
+                                insertCmd.Parameters.AddWithValue("@back", row[1]);
+                                insertCmd.ExecuteNonQuery();
+                            }
+                            sqlConn.Close();
                         }
-
-                        if (recsUploaded >= recordCount)
-                            break;
                     }
-
-                    sourceConnection.Close();
+                    conn.Close();
                 }
-
-                destinationConnection.Close();
-
             }
 
-            WriteBoth("UploadTable - " + sourceTableName + " - End");
+            Helper.ExecuteSqlNonQuery(EssexSqlConnectionString, "DELETE FROM IN_MISC");
+            TableUploader tp = new TableUploader();
+            tp.Upload(EssexHostConnectionString, "in_misc", EssexSqlConnectionString);
+            WriteBoth("Uploaded IN_MISC");
         }
-
         void WriteBoth(String txt)
         {
-            String s = DateTime.Now.ToLongTimeString() +" " + txt;
+            String s = DateTime.Now.ToLongTimeString() + " " + txt;
             System.Diagnostics.Debug.WriteLine(s);
             TestContext.WriteLine(s);
         }

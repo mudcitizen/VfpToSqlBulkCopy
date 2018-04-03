@@ -6,9 +6,17 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
     [TestClass]
-    public class TestTableProcessor
+    public class TestTableUploader
     {
-        const String VfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;";
+        const String bogusVfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general";
+        String VfpConnectionString
+        { get
+            {
+                VfpConnectionStringBuilder bldr = new VfpConnectionStringBuilder(bogusVfpConnectionString);
+                return bldr.ConnectionString;
+            }
+        }
+            
         const String SqlConnectionString = @"Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
 
         public TestContext TestContext { get; set; }
@@ -31,7 +39,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             // Import from VFP
             TableUploader tp = new TableUploader();
-            tp.Upload(VfpConnectionString, tableName, SqlConnectionString);
+            tp.Upload(bogusVfpConnectionString, tableName, SqlConnectionString);
 
             // Make sure rowcounts are correct
             int actualRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
