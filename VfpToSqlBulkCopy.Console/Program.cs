@@ -10,6 +10,11 @@ namespace VfpToSqlBulkCopy.Console
     {
         static void Main(string[] args)
         {
+            Uploader u = new Uploader();
+            u.Upload();
+            System.Console.WriteLine("Process Complete");
+            System.Console.ReadKey();
         }
+
     }
 }
