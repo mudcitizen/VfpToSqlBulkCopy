@@ -53,6 +53,8 @@ namespace VfpToSqlBulkCopy.Utility
                 destinationConnection.Open();
 
                 #region Upload
+
+                sourceConnectionString = new VfpConnectionStringBuilder(sourceConnectionString).ConnectionString;
                 using (OleDbConnection sourceConnection = new OleDbConnection(sourceConnectionString))
                 {
                     sourceConnection.Open();

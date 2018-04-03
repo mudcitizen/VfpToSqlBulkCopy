@@ -10,6 +10,8 @@ namespace VfpToSqlBulkCopy.Utility
         public Dictionary<String, OleDbColumnDefinition> GetSchema(String connectionString, String tableName)
         {
             Dictionary<String, OleDbColumnDefinition> schema = new Dictionary<String, OleDbColumnDefinition>();
+            connectionString = new VfpConnectionStringBuilder(connectionString).ConnectionString;
+
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
                 conn.Open();
