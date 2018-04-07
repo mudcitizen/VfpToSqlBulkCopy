@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.SqlClient;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
@@ -13,6 +14,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     {
         const String VfpConnectionName = "Host";
         const String SqlConnectionName = "Sql";
+        const String TestDbConnectionString = @"Data Source=(local);Initial Catalog=test;Integrated Security=True";
 
         const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=d:\vfptosql\vhost;Collating Sequence=general;DELETED=False;";
 
@@ -91,6 +93,100 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             tp.Upload(EssexHostConnectionString, "in_misc", EssexSqlConnectionString);
             WriteBoth("Uploaded IN_MISC");
         }
+
+
+        [TestMethod]
+        public void TestUploadStringWithAsciiZero()
+        {
+            //String backGround = File.ReadAllText(@"C:\Temp\1.pdf");
+
+            //String insertCmdStr = "insert into pdfBackground (background) values (@backGround)";
+            //using (SqlConnection sqlConn = new SqlConnection(TestDbConnectionString))
+            //{
+            //    sqlConn.Open();
+            //    using (SqlCommand insertCmd = new SqlCommand(insertCmdStr, sqlConn))
+            //    {
+            //        insertCmd.Parameters.AddWithValue("@backGround", backGround);
+            //        insertCmd.ExecuteNonQuery();
+            //    }
+            //    sqlConn.Close();
+            //}
+        }
+
+        [TestMethod]
+        public void TestLinkedServerUpload()
+        {
+            String dataSource = @"D:\GDPR\VHOST\";
+            //String dataSource = @"D:\Essex\HostDema\";
+            String tableName = "IN_MSG";
+            String dropTable = "if exists(SELECT Table_Name FROM test.INFORMATION_SCHEMA.Tables where Table_Name = 'wtf')   drop table test.dbo.wtf";
+            String dropLinkedServer = "if exists(select * from sys.servers where name = N'VFPTOSQL') EXEC master.sys.sp_dropserver 'VFPTOSQL','droplogins'";
+            String addLinkedServer = String.Format(@"EXEC master.dbo.sp_addlinkedserver @server = N'VFPTOSQL', @srvproduct=N'', @provider=N'VFPOLEDB', @datasrc=N'{0}'", dataSource);
+            String uploadData = String.Format("select * into test.dbo.wtf from OpenQuery(VFPTOSQL,'SELECT * FROM {0}')", tableName);
+
+
+            using (SqlConnection sqlConn = new SqlConnection(TestDbConnectionString))
+            {
+                sqlConn.Open();
+                // Drop Table
+                using (SqlCommand sqlCmd = new SqlCommand(dropTable, sqlConn))
+                {
+                    sqlCmd.ExecuteNonQuery();
+                }
+                // Drop LinkedServer 
+                using (SqlCommand sqlCmd = new SqlCommand(dropLinkedServer, sqlConn))
+                {
+                    sqlCmd.ExecuteNonQuery();
+                }
+                // Add LinkedServer 
+                using (SqlCommand sqlCmd = new SqlCommand(addLinkedServer, sqlConn))
+                {
+                    sqlCmd.ExecuteNonQuery();
+                }
+
+                // Upload
+                using (SqlCommand sqlCmd = new SqlCommand(uploadData, sqlConn))
+                {
+                    sqlCmd.CommandTimeout = 0;
+                    sqlCmd.ExecuteNonQuery();
+                }
+
+                sqlConn.Close();
+            }
+        }
+
+        [TestMethod]
+        public void TestReader()
+        {
+            String cmdStr = "SELECT STR(len(background)), Background  FROM memobinary";
+            const int lenCol = 0;
+            const int backgroundCol = 1;
+            const String vfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=machine;DELETED=False;NULL=YES";
+            using (OleDbConnection conn = new OleDbConnection(vfpConnectionString))
+            {
+                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
+                {
+                    conn.Open();
+                    OleDbDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            int bytesInBackground = Convert.ToInt32(reader.GetString(lenCol));
+                            char[] chars = new char[bytesInBackground];
+                            byte[] bytes = new byte[bytesInBackground];
+                            reader.GetChars(backgroundCol,0,chars,0,bytesInBackground);
+                            reader.GetBytes(backgroundCol, 0, bytes, 0, bytesInBackground);
+                            TestContext.WriteLine(String.Format("Here - {0} ", "Boss"));
+                        }
+
+                    }
+                    conn.Close();
+                }
+            }
+        }
+
+
         void WriteBoth(String txt)
         {
             String s = DateTime.Now.ToLongTimeString() + " " + txt;
