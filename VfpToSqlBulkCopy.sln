@@ -10,6 +10,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VfpToSqlBulkCopy.Utility.Tests", "VfpToSqlBulkCopy.Utility.Tests\VfpToSqlBulkCopy.Utility.Tests.csproj", "{704D451E-FD58-41B2-85E8-42FE1A4E1B9E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vfp", "Vfp", "{E3D4BD76-E5FB-40B8-AFED-63D55F5CDF04}"
+	ProjectSection(SolutionItems) = preProject
+		VFP\vfptosqlbulkcopy.DLL = VFP\vfptosqlbulkcopy.DLL
+		VFP\VfpToSqlBulkCopy.PRG = VFP\VfpToSqlBulkCopy.PRG
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,14 +3,16 @@ lcTableIn = 'D:\VHOST\IN_WATRM.DBF'
 lcFolderOut = 'C:\TEMP\MEMOOUT\'
 lcTableOut = 'MemoProblems'
 
+* USE C:\TEMP\MEMOOUT\MemoProblems'
 LOCAL lcClass,lcReturn
 lcClass = 'VfpToSqlBulkCopy.VfpToSqlBulkCopy'
 lcClass = 'VfpToSqlBulkCopy'
 WITH CREATEOBJECT(lcClass)
   lcReturn = .ListMemos(lcTableIn,lcFolderOut,lcTableOut)
-  IF EMPTY(lcReturn) 
+  = halthere(PROGRAM())
+  IF EMPTY(lcReturn)
     SELECT * FROM (ADDBS(lcFolderOut)+lcTableOut)
-  ENDIF 
+  ENDIF
 ENDWITH
 
 
@@ -130,16 +132,17 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
     CATCH TO loExcp
       LOCAL loErrHandler
       loErrHandler = CREATEOBJECT('ErrorHandler',loExcp)
-      lcReturn = loErrHandler.ErrorMessage
-      MODIFY COMMAND (loErrHandler.ErrorFileName) NOWAIT 
+      lcReturn = loErrHandler.ErrorDetails
     ENDTRY
 
 *!*	    IF NOT ISNULL(loExcp)
 *!*	      LOCAL loErrHandler
 *!*	      loErrHandler = CREATEOBJECT('ErrorHandler',loExcp)
-*!*	      lcReturn = loErrHandler.ErrorMessage
-*!*	    ENDIF 
-    RETURN lcReturn 
+*!*	      lcReturn = loErrHandler.ErrorDetails
+*!*	      MODIFY COMMAND (loErrHandler.ErrorFileName) NOWAIT
+*!*	    ENDIF
+
+    RETURN lcReturn
 
   ENDPROC
 
@@ -148,22 +151,29 @@ ENDDEFINE
 
 DEFINE CLASS ErrorHandler as Custom
 
-  ErrorFileName  = ''
+  ErrorFileName = ''
   ErrorMessage = ''
+  ErrorDetails = ''
 
-  PROCEDURE Init(toExcp as Exception) 
+  PROCEDURE Init(toExcp as Exception)
     LOCAL lcStack(1)
     WITH This
       .ErrorFileName = ADDBS(GETENV('TEMP')) + 'VfpToSqlBulkCopy' + '_' + TTOC(DATETIME(),1) + '_' + SYS(2015) + '.err'
       LIST STATUS TO FILE (.ErrorFileName) NOCONSOLE
-      .ErrorMessage = 'Error # - {0} ; Message - {1}. See {2} for details.'
+      .ErrorMessage = 'Error # - {0} ; Message - {1} @ Line # - {2} ; Line # - {3} ; See {4} for details.'
       .ErrorMessage = STRTRAN(.ErrorMessage,'{0}',ALLTRIM(STR(toExcp.ErrorNo)))
-      .ErrorMessage = STRTRAN(.ErrorMessage,'{1}',toExcp.Message) 
-      .ErrorMessage = STRTRAN(.ErrorMessage,'{2}',.ErrorFileName) 
+      .ErrorMessage = STRTRAN(.ErrorMessage,'{1}',toExcp.Message)
+      .ErrorMessage = STRTRAN(.ErrorMessage,'{2}',ALLTRIM(STR(toExcp.LineNo)))
+      TRY
+        .ErrorMessage = STRTRAN(.ErrorMessage,'{3}',ALLTRIM(STR(toExcp.LineContents)))
+      CATCH
+      ENDTRY
+      .ErrorMessage = STRTRAN(.ErrorMessage,'{4}',.ErrorFileName)
       LOCAL lcExcp
       lcExcp =  .ErrorMessage
       = ASTACKINFO(laStack)
-      LIST MEMORY TO (.ErrorFileName) ADDITIVE NOCONSOLE 
+      LIST MEMORY TO (.ErrorFileName) ADDITIVE NOCONSOLE
+      .ErrorDetails = FILETOSTR(.ErrorFileName)
     ENDWITH
   ENDPROC
 

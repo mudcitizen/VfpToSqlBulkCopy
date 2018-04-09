@@ -7,13 +7,17 @@ using System.Data;
 using System.Configuration;
 using System.Data.OleDb;
 using System.Data.SqlClient;
-
+using System.IO;
+using vfptosqlbulkcopy;
 
 namespace VfpToSqlBulkCopy.Utility
 {
     public class TableUploader
     {
         private readonly int BatchSize = 25000;
+
+        const string VfpDbfFileExtension = "DBF";
+        const string VfpFptFileExtension = "FPT";
 
         public event EventHandler<TableUploadBeginEventArgs> TableUploadBegin;
         public event EventHandler<TableUploadEndEventArgs> TableUploadEnd;
@@ -39,7 +43,7 @@ namespace VfpToSqlBulkCopy.Utility
         }
 
         private void Process(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
-        { 
+        {
 
             if (String.IsNullOrEmpty(destinationTableName))
                 destinationTableName = sourceTableName.Replace("-", "_");
@@ -54,7 +58,10 @@ namespace VfpToSqlBulkCopy.Utility
 
                 #region Upload
 
-                sourceConnectionString = new VfpConnectionStringBuilder(sourceConnectionString).ConnectionString;
+                VfpConnectionStringBuilder vfpConnStrBldr = new VfpConnectionStringBuilder(sourceConnectionString);
+                sourceConnectionString = vfpConnStrBldr.ConnectionString;
+                String vfpFolderName = vfpConnStrBldr.DataSource;
+
                 using (OleDbConnection sourceConnection = new OleDbConnection(sourceConnectionString))
                 {
                     sourceConnection.Open();
@@ -88,6 +95,76 @@ namespace VfpToSqlBulkCopy.Utility
 
                     sourceConnection.Close();
                 }
+
+                #endregion
+
+                #region ASCII 0 in memo
+
+                String outTableStem = destinationTableName + "_MemoProblems";
+                const String fieldColumnName = "fieldname";
+                const String recnoColumnName = "recno";
+                const String fileNameColumnName = "filename";
+
+
+
+                String tableIn = Path.Combine(vfpFolderName, Path.ChangeExtension(sourceTableName, "DBF"));
+
+                String outFolder = Path.Combine(vfpFolderName, "memodata");
+                String outTable = outTableStem + ".dbf";
+                String outTableFileName = Path.Combine(outFolder, outTable);
+
+                DeleteDbf(outTableFileName);
+
+                if (!Directory.Exists(outFolder))
+                    Directory.CreateDirectory(outFolder);
+
+                Ivfptosqlbulkcopy com = new vfptosqlbulkcopyClass();
+                String result = com.ListMemos(tableIn, outFolder, outTable);
+                if (!String.IsNullOrEmpty(result))
+                    throw new ApplicationException(result);
+
+                // We are not storing the temp table in the Hostplus folder so we'll need 
+                // a different connectionString to read it.
+                VfpConnectionStringBuilder tempVpfConnBldr = new VfpConnectionStringBuilder();
+                tempVpfConnBldr.DataSource = outFolder;
+                dataTable = Helper.GetOleDbDataTable(tempVpfConnBldr.ConnectionString, "SELECT * FROM " + outTableStem);
+
+                using (SqlConnection sqlConn = new SqlConnection(destinationConnectionString))
+                {
+                    sqlConn.Open();
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        String fieldName = row[fieldColumnName].ToString();
+                        int recno = Convert.ToInt32(row[recnoColumnName]);
+                        String fileName = row[fileNameColumnName].ToString();
+                        String memoData = File.ReadAllText(fileName);
+
+
+                        String updateMemoCmdStr = String.Format("UPDATE {0} SET {1} = @{1} WHERE {2} = @{2}", destinationTableName, fieldName, Constants.DILayer.RecnoColumnName);
+                        using (SqlCommand sqlCmd = new SqlCommand(updateMemoCmdStr, sqlConn))
+                        {
+                            sqlCmd.Parameters.AddWithValue("@" + fieldName, memoData);
+                            sqlCmd.Parameters.AddWithValue("@" + Constants.DILayer.RecnoColumnName, recno.ToString());
+                            sqlCmd.ExecuteNonQuery();
+                        }
+
+                        File.Delete(fileName);
+
+                    }
+
+                    sqlConn.Close();
+                }
+
+
+                DeleteDbf(outTableFileName);
+
+                try
+                {
+                    Directory.Delete(outFolder, true);
+                }
+                catch (Exception ex)
+                { }
+
                 #endregion
 
                 #region Update SqlDeleted
@@ -119,6 +196,17 @@ namespace VfpToSqlBulkCopy.Utility
                 destinationConnection.Close();
             }
 
+        }
+
+        void DeleteDbf(String fileName)
+        {
+            IList<String> fileExtensions = new List<String> { VfpDbfFileExtension, VfpFptFileExtension };
+            foreach (String fileExension in fileExtensions)
+            {
+                String fn = Path.ChangeExtension(fileName, fileExension);
+                if (File.Exists(fn))
+                    File.Delete(fn);
+            }
         }
 
         #region EventPublishers

@@ -25,6 +25,15 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
         public TestContext TestContext { get; set; }
 
+        [TestMethod]
+        public void TestPathStuff()
+        {
+            String dir = @"D:\VFPTOSQL\VHOST";
+            String table = "IN_WATRM";
+            String fn = Path.Combine(dir, Path.ChangeExtension(table, "DBF"));
+            TestContext.WriteLine(fn);
+
+        }
 
         [TestMethod]
         public void TestCOMClient()
@@ -151,36 +160,6 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             }
         }
 
-        [TestMethod]
-        public void TestReader()
-        {
-            String cmdStr = "SELECT STR(len(background)), Background  FROM memobinary";
-            const int lenCol = 0;
-            const int backgroundCol = 1;
-            const String vfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=machine;DELETED=False;NULL=YES";
-            using (OleDbConnection conn = new OleDbConnection(vfpConnectionString))
-            {
-                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
-                {
-                    conn.Open();
-                    OleDbDataReader reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            int bytesInBackground = Convert.ToInt32(reader.GetString(lenCol));
-                            char[] chars = new char[bytesInBackground];
-                            byte[] bytes = new byte[bytesInBackground];
-                            reader.GetChars(backgroundCol, 0, chars, 0, bytesInBackground);
-                            reader.GetBytes(backgroundCol, 0, bytes, 0, bytesInBackground);
-                            TestContext.WriteLine(String.Format("Here - {0} ", "Boss"));
-                        }
-
-                    }
-                    conn.Close();
-                }
-            }
-        }
 
 
         void WriteBoth(String txt)

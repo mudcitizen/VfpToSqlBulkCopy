@@ -60,6 +60,23 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         }
 
         [TestMethod]
+         public void TestUploadithAsciiZero()
+        {
+            const String tableName = "IN_WATRM";
+            Helper.ExecuteSqlNonQuery(SqlConnectionString,"DELETE FROM " + tableName);
+
+            TableUploader tu = new TableUploader();
+            tu.Upload(VfpConnectionString, tableName, SqlConnectionString);
+
+            DataTable dt = Helper.GetSqlDataTable(SqlConnectionString, "select charindex(char(0),cast(background as varchar(max))) from " + tableName);
+            foreach (DataRow row in dt.Rows)
+                Assert.IsTrue(Convert.ToInt32(row[0]) > 0);
+
+        }
+
+
+
+        [TestMethod]
         public void TestBasicCommandStringProvider()
         {
             const string tableName = "IN_MSG";
@@ -84,7 +101,6 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             TestContext.WriteLine(actual);
            
-
         }
 
 
