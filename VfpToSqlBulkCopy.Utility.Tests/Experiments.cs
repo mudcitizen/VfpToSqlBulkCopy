@@ -6,6 +6,7 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using vfptosqlbulkcopy;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
@@ -26,28 +27,23 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
 
         [TestMethod]
-        public void TestWhatever()
+        public void TestCOMClient()
         {
 
-            String thisTable = "MS_W";
-            String restartTable = "PSCHK";
-            int intResult = String.Compare(thisTable, restartTable, StringComparison.CurrentCulture);
+            Ivfptosqlbulkcopy com = new vfptosqlbulkcopyClass();
+            const String tableIn = @"D:\VHOST\IN_WATRM.DBF";
+            const String folderOut = @"C:\TEMP\MEMOOUT\";
+            const String tableOut = "MemoProblems";
 
-            char[] thisArray = thisTable.ToCharArray();
-            char[] restartArray = restartTable.ToCharArray();
 
-            int iterCount = thisArray.Length < restartArray.Length ? thisArray.Length : restartArray.Length;
-            Boolean greaterOrEqual = true;
-            for (int i = 0; i < iterCount; i++)
+            String result = com.ListMemos(tableIn, folderOut, tableOut);
+
+            foreach (String fn in Directory.GetFiles(folderOut))
             {
-                if ((greaterOrEqual) && (thisArray[i] < restartArray[i]))
-                {
-                    greaterOrEqual = false;
-                    break;
-                }
+                TestContext.WriteLine(fn);
             }
 
-            TestContext.WriteLine(String.Format("GreaterOrEqual - {0}", greaterOrEqual));
+
         }
 
 
@@ -175,7 +171,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
                             int bytesInBackground = Convert.ToInt32(reader.GetString(lenCol));
                             char[] chars = new char[bytesInBackground];
                             byte[] bytes = new byte[bytesInBackground];
-                            reader.GetChars(backgroundCol,0,chars,0,bytesInBackground);
+                            reader.GetChars(backgroundCol, 0, chars, 0, bytesInBackground);
                             reader.GetBytes(backgroundCol, 0, bytes, 0, bytesInBackground);
                             TestContext.WriteLine(String.Format("Here - {0} ", "Boss"));
                         }
