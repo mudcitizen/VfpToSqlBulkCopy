@@ -68,17 +68,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <COMReference Include="vfptosqlbulkcopy">
-      <Guid>{C36F57D9-E232-4C14-A8C9-E94A009765B4}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\VfpToSqlBulkCopy.Utility\VfpToSqlBulkCopy.Utility.csproj">
       <Project>{d43f9fe7-8752-4fb7-99f1-4ea4a0dab155}</Project>
       <Name>VfpToSqlBulkCopy.Utility</Name>

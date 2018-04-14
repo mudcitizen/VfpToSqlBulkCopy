@@ -6,7 +6,6 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using vfptosqlbulkcopy;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
@@ -32,26 +31,6 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             String table = "IN_WATRM";
             String fn = Path.Combine(dir, Path.ChangeExtension(table, "DBF"));
             TestContext.WriteLine(fn);
-
-        }
-
-        [TestMethod]
-        public void TestCOMClient()
-        {
-
-            Ivfptosqlbulkcopy com = new vfptosqlbulkcopyClass();
-            const String tableIn = @"D:\VHOST\IN_WATRM.DBF";
-            const String folderOut = @"C:\TEMP\MEMOOUT\";
-            const String tableOut = "MemoProblems";
-
-
-            String result = com.ListMemos(tableIn, folderOut, tableOut);
-
-            foreach (String fn in Directory.GetFiles(folderOut))
-            {
-                TestContext.WriteLine(fn);
-            }
-
 
         }
 
