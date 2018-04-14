@@ -3,9 +3,10 @@
 
 VFP/*.BAK
 VFP/*.FXP
+VFP/*.ERR
+VFP/a.*
 VFP/R.PRG
 VFP/HALTHERE.PRG
-VFP/*.PJ?
 VFP/*.VBR
 vfp/*.txt
 

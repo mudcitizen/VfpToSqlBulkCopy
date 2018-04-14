@@ -63,14 +63,9 @@
   <ItemGroup>
     <Content Include="App.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VfpToSqlBulkCopy.Utility\VfpToSqlBulkCopy.Utility.csproj">
-      <Project>{d43f9fe7-8752-4fb7-99f1-4ea4a0dab155}</Project>
-      <Name>VfpToSqlBulkCopy.Utility</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="vfptosqlbulkcopy">
@@ -82,6 +77,12 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VfpToSqlBulkCopy.Utility\VfpToSqlBulkCopy.Utility.csproj">
+      <Project>{d43f9fe7-8752-4fb7-99f1-4ea4a0dab155}</Project>
+      <Name>VfpToSqlBulkCopy.Utility</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
