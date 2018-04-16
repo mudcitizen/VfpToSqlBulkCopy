@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility
 {
-    public class TableUploadBeginEventArgs
+    public class TableProcessorBeginEventArgs
     {
-        public TableUploadBeginEventArgs(String tableName)
+        public TableProcessorBeginEventArgs(String tableName)
         {
             TableName = tableName;
             When = DateTime.Now;

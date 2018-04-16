@@ -35,49 +35,6 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         }
 
 
-        [TestMethod]
-        public void TestDataTableWithNullChrInMemo()
-        {
-
-            const String sqlConnectionString = @"Data Source=(local);Initial Catalog=test;Integrated Security=True";
-
-            String cmdStr = "SELECT RECNO() as RecNo, Background,len(background) FROM IN_WATRM";
-            const String vfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;NULL=YES";
-            DataTable result = null;
-            using (OleDbConnection conn = new OleDbConnection(vfpConnectionString))
-            {
-                using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
-                {
-                    conn.Open();
-                    result = new DataTable();
-                    result.Load(cmd.ExecuteReader());
-                    foreach (DataRow row in result.Rows)
-                    {
-                        String insertCmdStr = "insert into test (background) values (@back)";
-                        using (SqlConnection sqlConn = new SqlConnection(sqlConnectionString))
-                        {
-                            sqlConn.Open();
-                            using (SqlCommand insertCmd = new SqlCommand(insertCmdStr, sqlConn))
-                            {
-                                int strLen = row[1].ToString().Length;
-                                String bkgrnd = row[1].ToString();
-                                int bkgrndLen = bkgrnd.Length;
-                                insertCmd.Parameters.AddWithValue("@back", row[1]);
-                                insertCmd.ExecuteNonQuery();
-                            }
-                            sqlConn.Close();
-                        }
-                    }
-                    conn.Close();
-                }
-            }
-
-            Helper.ExecuteSqlNonQuery(EssexSqlConnectionString, "DELETE FROM IN_MISC");
-            TableUploader tp = new TableUploader();
-            tp.Upload(EssexHostConnectionString, "in_misc", EssexSqlConnectionString);
-            WriteBoth("Uploaded IN_MISC");
-        }
-
 
         [TestMethod]
         public void TestUploadStringWithAsciiZero()

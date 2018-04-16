@@ -54,11 +54,12 @@
   <ItemGroup>
     <Compile Include="Experiments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestTableUploader.cs" />
+    <Compile Include="TestTableProcessor.cs" />
     <Compile Include="TestUploadLauncher.cs" />
     <Compile Include="TestRestartParameter.cs" />
     <Compile Include="TestTableNameProvider.cs" />
     <Compile Include="TestVfpConnectionStringBuilder.cs" />
+    <Compile Include="TestTableProcessors.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config">

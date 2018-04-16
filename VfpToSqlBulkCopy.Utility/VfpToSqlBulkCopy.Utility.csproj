@@ -42,8 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsciiZeroMemoProcessor.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="SetDeletedProcessor.cs" />
     <Compile Include="ITableNameProvider.cs" />
+    <Compile Include="ITableProcessor.cs" />
+    <Compile Include="NullDateProcessor.cs" />
     <Compile Include="RestartParameter.cs" />
     <Compile Include="SelectCommandStringProvider.cs" />
     <Compile Include="Helper.cs" />
@@ -51,14 +55,16 @@
     <Compile Include="OleDbColumnDefinition.cs" />
     <Compile Include="OleDbSchemaProvider.cs" />
     <Compile Include="TableNameProvider.cs" />
-    <Compile Include="TableUploadBeginEventArgs.cs" />
-    <Compile Include="TableUploadEndEventArgs.cs" />
+    <Compile Include="TableProcessor.cs" />
+    <Compile Include="TableProcessorBeginEventArgs.cs" />
+    <Compile Include="TableProcessorEndEventArgs.cs" />
     <Compile Include="TableUploader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TableUploadErrorEventArgs.cs" />
+    <Compile Include="TableProcessorErrorEventArgs.cs" />
     <Compile Include="UpdateDateCommandStringProvider.cs" />
     <Compile Include="UploadLauncher.cs" />
     <Compile Include="VfpConnectionStringBuilder.cs" />
+    <Compile Include="ZapProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="vfptosqlbulkcopy">

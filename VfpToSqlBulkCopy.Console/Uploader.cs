@@ -12,7 +12,7 @@ namespace VfpToSqlBulkCopy.Console
 {
     public class Uploader
     {
-        TableUploadBeginEventArgs UploadBeginEventArgs;
+        TableProcessorBeginEventArgs UploadBeginEventArgs;
         IDictionary<String, Exception> UploadExceptions;
 
         public void Upload()
@@ -30,8 +30,8 @@ namespace VfpToSqlBulkCopy.Console
                 connStrs.Add(connName, connStr);
 
             UploadLauncher uploadLauncher = new UploadLauncher(connStrs);
-            uploadLauncher.TableUploader.TableUploadBegin += HandleTableUploadBegin;
-            uploadLauncher.TableUploader.TableUploadEnd += HandleTableUploadEnd;
+            uploadLauncher.TableProcessor.TableProcessorBegin += HandleTableUploadBegin;
+            uploadLauncher.TableProcessor.TableProcessorEnd += HandleTableUploadEnd;
 
             uploadLauncher.Launch();
 
@@ -64,19 +64,19 @@ namespace VfpToSqlBulkCopy.Console
             
         }
 
-        private void HandleTableUploadBegin(Object sender, TableUploadBeginEventArgs args)
+        private void HandleTableUploadBegin(Object sender, TableProcessorBeginEventArgs args)
         {
             UploadBeginEventArgs = args;
             System.Console.Write(String.Format("{0} - {1}", PadTableName(args.TableName), args.When.ToLongTimeString()));
         }
-        private void HandleTableUploadEnd(Object sender, TableUploadEndEventArgs args)
+        private void HandleTableUploadEnd(Object sender, TableProcessorEndEventArgs args)
         {
             TimeSpan ts = args.When - UploadBeginEventArgs.When;
             String duration = String.Format("{0:D2}:{1:D2}:{2:D2}:{3:D3}", ts.Hours, ts.Minutes, ts.Seconds,ts.Milliseconds);
 
             System.Console.WriteLine(" " + args.When.ToLongTimeString() + " " + duration);
         }
-        private void HandleTableUploadException(Object sender, TableUploadErrorEventArgs args)
+        private void HandleTableUploadException(Object sender, TableProcessorErrorEventArgs args)
         {
             if (UploadExceptions == null)
                 UploadExceptions = new Dictionary<String, Exception>();

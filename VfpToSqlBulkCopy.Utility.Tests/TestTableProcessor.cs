@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
     [TestClass]
-    public class TestTableUploader
+    public class TestTableProcessor
     {
         const String bogusVfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general";
         String VfpConnectionString
@@ -38,8 +38,8 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             Assert.AreEqual(0, (int)Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
 
             // Import from VFP
-            TableUploader tp = new TableUploader();
-            tp.Upload(bogusVfpConnectionString, tableName, SqlConnectionString);
+            TableProcessor tp = new TableProcessor();
+            tp.Process(bogusVfpConnectionString, tableName, SqlConnectionString,tableName);
 
             // Make sure rowcounts are correct
             int actualRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, getCountCommandString));
@@ -49,13 +49,25 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             // Check handling of Deleted() 
             int sqlDeletedRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, getCountCommandString + String.Format(" WHERE {0} = 1",Constants.DILayer.DeletedColumnName)));
             Assert.AreEqual(sqlDeletedRowCount, vfpDeletedRowCount);
+
+            // Check for nullDates
+            String nullDateRowCountCmdStr = getCountCommandString + " WHERE mscldate is null or msBegin is null or msDate is null";
+            int nullDateRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, nullDateRowCountCmdStr));
+            Assert.IsTrue(nullDateRowCount > 0);
+            // Check for non nullDates
+            nullDateRowCountCmdStr = getCountCommandString + " WHERE mscldate is not null or msBegin is not null or msDate is not null";
+            nullDateRowCount = Convert.ToInt32(Helper.GetSqlScaler(SqlConnectionString, nullDateRowCountCmdStr));
+            Assert.IsTrue(nullDateRowCount > 0);
+
+
         }
 
         [TestMethod]
         public void TestUploadOfTableWithDateFieldsThatAreReservedWords()
         {
-            TableUploader tp = new TableUploader();
-            tp.Upload(VfpConnectionString, "SGIBKHDR", SqlConnectionString);
+            TableProcessor tp = new TableProcessor();
+            const String tableName = "SGIBKHDR";
+            tp.Process(VfpConnectionString, tableName, SqlConnectionString,tableName);
             TestContext.WriteLine("TestUploadOfTableWithDateFieldsThatAreReservedWords complete");
         }
 
@@ -65,8 +77,8 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             const String tableName = "IN_WATRM";
             Helper.ExecuteSqlNonQuery(SqlConnectionString,"DELETE FROM " + tableName);
 
-            TableUploader tu = new TableUploader();
-            tu.Upload(VfpConnectionString, tableName, SqlConnectionString);
+            TableProcessor tp = new TableProcessor();
+            tp.Process(VfpConnectionString, tableName, SqlConnectionString,tableName);
 
             DataTable dt = Helper.GetSqlDataTable(SqlConnectionString, "select charindex(char(0),cast(background as varchar(max))) from " + tableName);
             foreach (DataRow row in dt.Rows)

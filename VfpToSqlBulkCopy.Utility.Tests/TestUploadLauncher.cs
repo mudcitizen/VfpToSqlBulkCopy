@@ -26,7 +26,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;");
             //connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
 
-           UploadLauncher ul = new UploadLauncher(connStrs,null);
+            UploadLauncher ul = new UploadLauncher(connStrs, null);
             LogFileName = "Laptop_Upload.Log";
             RunUploadLauncher(ul);
 
@@ -49,16 +49,16 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             RunUploadLauncher(ul);
         }
 
-        private void HandleTableUploadBegin(Object sender, TableUploadBeginEventArgs args)
+        private void HandleTableUploadBegin(Object sender, TableProcessorBeginEventArgs args)
         {
             WriteBoth(String.Format("Begin - " + args.ToString()));
         }
-        private void HandleTableUploadEnd(Object sender, TableUploadEndEventArgs args)
+        private void HandleTableUploadEnd(Object sender, TableProcessorEndEventArgs args)
         {
             WriteBoth(String.Format("End - " + args.ToString()));
         }
 
-        private void HandleTableUploadError(Object sender, TableUploadErrorEventArgs args)
+        private void HandleTableUploadError(Object sender, TableProcessorErrorEventArgs args)
         {
             WriteBoth(String.Format("End - " + args.ToString()));
             WriteBoth(args.Exception.ToString());
@@ -78,9 +78,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
                 File.Delete(LogFileName);
 
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
-            uploadLauncer.TableUploader.TableUploadBegin += HandleTableUploadBegin;
-            uploadLauncer.TableUploader.TableUploadEnd += HandleTableUploadEnd;
-            uploadLauncer.TableUploader.TableUploadError += HandleTableUploadError;
+            uploadLauncer.TableProcessor.TableProcessorBegin += HandleTableUploadBegin;
+            uploadLauncer.TableProcessor.TableProcessorEnd += HandleTableUploadEnd;
+            uploadLauncer.TableProcessor.TableProcessorError += HandleTableUploadError;
             uploadLauncer.Launch();
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
             TestContext.WriteLine("Done");
