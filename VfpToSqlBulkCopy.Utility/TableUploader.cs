@@ -14,16 +14,18 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class TableUploader : ITableProcessor
     {
-        private readonly int BatchSize = 25000;
+        private int BatchSize = 25000;
             
 
         public void Process(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
         {
 
-            if (String.IsNullOrEmpty(destinationTableName))
-                destinationTableName = sourceTableName.Replace("-", "_");
-
+            destinationTableName = Helper.GetDestinationTableName(destinationTableName);
             int recordCount = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, "SELECT COUNT(*) FROM " + sourceTableName));
+
+            int configuredBatchSize = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, String.Format("SELECT BatchSize FROM DITABLE WHERE Table = '{0}'",sourceTableName)));
+            if (configuredBatchSize != 0)
+                BatchSize = configuredBatchSize;
 
             DataTable dataTable = null;
 
@@ -76,6 +78,11 @@ namespace VfpToSqlBulkCopy.Utility
                 destinationConnection.Close();
             }
 
+        }
+
+        public int GetBatchSize()
+        {
+            return BatchSize;
         }
   
 

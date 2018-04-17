@@ -10,6 +10,7 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
+            destinationTableName = Helper.GetDestinationTableName(destinationTableName);
             Helper.ExecuteSqlNonQuery(destinationConnectionString, "DELETE FROM " + destinationTableName);
         }
     }

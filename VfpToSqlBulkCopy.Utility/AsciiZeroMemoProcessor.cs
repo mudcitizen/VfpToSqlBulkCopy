@@ -13,6 +13,7 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
+            destinationTableName = Helper.GetDestinationTableName(destinationTableName);
             VfpConnectionStringBuilder vfpConnStrBldr = new VfpConnectionStringBuilder(sourceConnectionString);
             String vfpFileName = Path.Combine(vfpConnStrBldr.DataSource, Path.ChangeExtension(sourceTableName, "DBF"));
 

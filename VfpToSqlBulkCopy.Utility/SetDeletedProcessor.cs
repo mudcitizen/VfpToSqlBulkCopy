@@ -13,6 +13,7 @@ namespace VfpToSqlBulkCopy.Utility
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
             const String recnoParm = "@recno";
+            destinationTableName = Helper.GetDestinationTableName(destinationTableName);
             String vfpConnStr = new VfpConnectionStringBuilder(sourceConnectionString).ConnectionString;
             DataTable dataTable = Helper.GetOleDbDataTable(vfpConnStr, String.Format("SELECT RECNO() AS RecNo FROM {0} WHERE DELETED()", sourceTableName));
             if (dataTable.Rows.Count != 0)

@@ -103,7 +103,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             foreach (KeyValuePair<String, OleDbColumnDefinition> kvp in schema)
             {
-                Assert.IsTrue(upperActual.Contains(kvp.Value.Name + ","));
+                Assert.IsTrue(upperActual.Contains(kvp.Value.Name + ",") || upperActual.Contains(kvp.Value.Name + " "));
             }
 
             // Can we run it?  Turns out - we can't.  VFP raises Error # 1890
@@ -115,6 +115,51 @@ namespace VfpToSqlBulkCopy.Utility.Tests
            
         }
 
+        [TestMethod]
+        public void TestBatchSizeReset()
+        {
+            TableUploader tu = new TableUploader();
+            int batchSizeBefore = tu.GetBatchSize();
+            const String tableName = "IN_WMAIL";
+            tu.Process(VfpConnectionString, tableName, SqlConnectionString, tableName);
+            int batchSizeAfter = tu.GetBatchSize();
+            Assert.IsTrue(batchSizeAfter > 0);
+            Assert.IsTrue(batchSizeAfter != batchSizeBefore); 
+        }
+
+        [TestMethod]
+        public void TestHelperGetDestinationTableName()
+        {
+            String tableNameIn = "TA-AGT";
+            String expected = "TA_AGT";
+            String actual = Helper.GetDestinationTableName(tableNameIn);
+            Assert.AreNotEqual(actual, tableNameIn);
+            Assert.AreEqual(actual, expected);
+            actual = Helper.GetDestinationTableName(expected);
+            Assert.AreEqual(actual, expected);
+        }
+
+        [TestMethod]
+        public void TestEssexInWMailUpload()
+        {
+            VfpConnectionStringBuilder vfpConnStrBldr = new VfpConnectionStringBuilder(VfpConnectionString);
+            vfpConnStrBldr.DataSource = @"D:\Essex\Hostdema\";
+            String vfpConnStr = vfpConnStrBldr.ConnectionString;
+
+            String sqlConnStr = "Data Source = (local); Initial Catalog = Essex_22_000211; Integrated Security = True";
+            const String tableName = "IN_WMAIL";
+            Helper.ExecuteSqlNonQuery(sqlConnStr, "DELETE FROM " + tableName);
+
+            string expectedRecordCountCmdStr = "SELECT COUNT(*) FROM " + tableName;
+            int expectedRecordCount = Convert.ToInt32(Helper.GetOleDbScaler(vfpConnStr, expectedRecordCountCmdStr));
+
+            TableUploader tu = new TableUploader();
+            tu.Process(vfpConnStr, tableName, sqlConnStr, tableName);
+            int actualRecordCount = Convert.ToInt32(Helper.GetSqlScaler(sqlConnStr, expectedRecordCountCmdStr));
+
+            Assert.AreEqual(expectedRecordCount, actualRecordCount);
+
+        }
 
     }
 }
