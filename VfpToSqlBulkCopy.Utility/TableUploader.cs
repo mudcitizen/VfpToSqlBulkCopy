@@ -14,7 +14,8 @@ namespace VfpToSqlBulkCopy.Utility
 {
     public class TableUploader : ITableProcessor
     {
-        private int BatchSize = 25000;
+        private readonly int DefaultBatchSize = 25000;
+        private int BatchSize = 0;
             
 
         public void Process(String sourceConnectionString, String sourceTableName, String destinationConnectionString, String destinationTableName)
@@ -24,8 +25,7 @@ namespace VfpToSqlBulkCopy.Utility
             int recordCount = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, "SELECT COUNT(*) FROM " + sourceTableName));
 
             int configuredBatchSize = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, String.Format("SELECT BatchSize FROM DITABLE WHERE Table = '{0}'",sourceTableName)));
-            if (configuredBatchSize != 0)
-                BatchSize = configuredBatchSize;
+            BatchSize = configuredBatchSize != 0 ? configuredBatchSize : DefaultBatchSize;
 
             DataTable dataTable = null;
 
