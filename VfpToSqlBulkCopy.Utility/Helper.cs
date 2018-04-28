@@ -109,5 +109,10 @@ namespace VfpToSqlBulkCopy.Utility
                 }
             }
         }
+
+        public static String GetDestinationTableName(String tableName)
+        {
+            return tableName.Replace('-', '_');
+        }
     }
 }

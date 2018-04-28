@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
@@ -26,7 +27,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;");
             //connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
 
-           UploadLauncher ul = new UploadLauncher(connStrs,null);
+            UploadLauncher ul = new UploadLauncher(connStrs, null);
             LogFileName = "Laptop_Upload.Log";
             RunUploadLauncher(ul);
 
@@ -49,21 +50,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             RunUploadLauncher(ul);
         }
 
-        private void HandleTableUploadBegin(Object sender, TableUploadBeginEventArgs args)
-        {
-            WriteBoth(String.Format("Begin - " + args.ToString()));
-        }
-        private void HandleTableUploadEnd(Object sender, TableUploadEndEventArgs args)
-        {
-            WriteBoth(String.Format("End - " + args.ToString()));
-        }
-
-        private void HandleTableUploadError(Object sender, TableUploadErrorEventArgs args)
-        {
-            WriteBoth(String.Format("End - " + args.ToString()));
-            WriteBoth(args.Exception.ToString());
-        }
-
+    
         private void WriteBoth(String txt)
         {
             String s = DateTime.Now.ToLongTimeString() + " " + txt;
@@ -72,16 +59,25 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             System.IO.File.AppendAllText(LogFileName, txt + Environment.NewLine);
         }
 
-        private void RunUploadLauncher(UploadLauncher uploadLauncer)
+        private void RunUploadLauncher(UploadLauncher uploadLauncher)
         {
             if (File.Exists(LogFileName))
                 File.Delete(LogFileName);
 
+
+            IEnumerable<ITableProcessorEventHandler> ehs = new List<ITableProcessorEventHandler>()
+            {
+                new ConsoleTableProcessorEventHandler(),
+                new TextFileITableProcessorEventHandler(LogFileName)
+            };
+            ITableProcessorEventHandler eh = new CompositeTableProcessorEventHandler(ehs);
+
+
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
-            uploadLauncer.TableUploader.TableUploadBegin += HandleTableUploadBegin;
-            uploadLauncer.TableUploader.TableUploadEnd += HandleTableUploadEnd;
-            uploadLauncer.TableUploader.TableUploadError += HandleTableUploadError;
-            uploadLauncer.Launch();
+            uploadLauncher.TableProcessor.TableProcessorBegin += eh.HandleTableProcessorBegin;
+            uploadLauncher.TableProcessor.TableProcessorEnd += eh.HandleTableProcessorEnd;
+            uploadLauncher.TableProcessor.TableProcessorException += eh.HandleTableProcessorException;
+            uploadLauncher.Launch();
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "End"));
             TestContext.WriteLine("Done");
 

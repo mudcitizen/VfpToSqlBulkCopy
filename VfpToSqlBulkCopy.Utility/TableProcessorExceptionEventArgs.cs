@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility
 {
-    public class TableUploadErrorEventArgs
+    public class TableProcessorExceptionEventArgs
     {
-        public TableUploadErrorEventArgs(String tableName, Exception exception)
+        public TableProcessorExceptionEventArgs(String tableName, Exception exception)
         {
             TableName = tableName;
             Exception = exception;

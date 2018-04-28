@@ -18,7 +18,7 @@ namespace VfpToSqlBulkCopy.Utility
         String SqlConnectionString;
         String HostConnectionString;
         RestartParameter RestartParm;
-        public TableUploader TableUploader { get; }
+        public TableProcessor TableProcessor { get; set; }
 
 
         public UploadLauncher(IDictionary<String, String> connStrs) : this(connStrs, null) { }
@@ -56,7 +56,7 @@ namespace VfpToSqlBulkCopy.Utility
             }
 
             RestartParm = restartDetails;
-            TableUploader = new TableUploader();
+            TableProcessor = new TableProcessor();
 
         }
 
@@ -79,7 +79,7 @@ namespace VfpToSqlBulkCopy.Utility
                     {
                         String msg = String.Format("{0} - {1} - Begin", DateTime.Now.ToShortTimeString(), tableName);
                         //Debug.WriteLine(msg);
-                        TableUploader.Upload(kvp.Value, tableName, SqlConnectionString, tableName.Replace('-', '_'));
+                        TableProcessor.Process(kvp.Value, tableName, SqlConnectionString, tableName.Replace('-', '_'));
                         msg = String.Format("{0} - {1} - End", DateTime.Now.ToShortTimeString(), tableName);
                         //Debug.WriteLine(msg);
                     }
