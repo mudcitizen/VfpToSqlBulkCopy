@@ -13,7 +13,7 @@ namespace VfpToSqlBulkCopy.Utility
 
         public event EventHandler<TableProcessorBeginEventArgs> TableProcessorBegin;
         public event EventHandler<TableProcessorEndEventArgs> TableProcessorEnd;
-        public event EventHandler<TableProcessorErrorEventArgs> TableProcessorError;
+        public event EventHandler<TableProcessorExceptionEventArgs> TableProcessorException;
 
         public TableProcessor()
         {
@@ -71,10 +71,10 @@ namespace VfpToSqlBulkCopy.Utility
 
         protected virtual void OnTableProcessorError(String tableName, Exception exception)
         {
-            EventHandler<TableProcessorErrorEventArgs> handler = TableProcessorError;
+            EventHandler<TableProcessorExceptionEventArgs> handler = TableProcessorException;
             if (handler != null)
             {
-                TableProcessorErrorEventArgs args = new TableProcessorErrorEventArgs(tableName, exception);
+                TableProcessorExceptionEventArgs args = new TableProcessorExceptionEventArgs(tableName, exception);
                 handler(this, args);
             }
         }

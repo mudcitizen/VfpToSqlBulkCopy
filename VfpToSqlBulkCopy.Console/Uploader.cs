@@ -6,7 +6,7 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using VfpToSqlBulkCopy.Utility;
-
+using VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers;
 
 namespace VfpToSqlBulkCopy.Console
 {
@@ -19,19 +19,40 @@ namespace VfpToSqlBulkCopy.Console
         {
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             String connName;
-            connName = Constants.ConnectionNames.Host;
+            connName = VfpToSqlBulkCopy.Utility.Constants.ConnectionNames.Host;
             connStrs.Add(connName, GetConnectionString(connName,true));
-            connName = Constants.ConnectionNames.Sql;
+            connName = VfpToSqlBulkCopy.Utility.Constants.ConnectionNames.Sql;
             connStrs.Add(connName, GetConnectionString(connName, true));
 
-            connName = Constants.ConnectionNames.POS;
+            connName = VfpToSqlBulkCopy.Utility.Constants.ConnectionNames.POS;
             String connStr = GetConnectionString(connName, false);
             if (!String.IsNullOrEmpty(connStr))
                 connStrs.Add(connName, connStr);
 
+
+            String logFileName = null;
+            try
+            {
+                var appSettings = ConfigurationManager.AppSettings;
+                logFileName = appSettings[Constants.TableProcessorEventsFileNameAppSettingsKey];
+            }
+            catch (ConfigurationErrorsException)
+            {
+                logFileName = "TableProcessorEvents.Log";
+            }
+
+            IList<ITableProcessorEventHandler> eventHandlers = new List<ITableProcessorEventHandler>()
+            {
+                new ConsoleTableProcessorEventHandler(),
+                new TextFileITableProcessorEventHandler(logFileName)
+            };
+            ITableProcessorEventHandler eventHandler = new CompositeTableProcessorEventHandler(eventHandlers);
+
+
             UploadLauncher uploadLauncher = new UploadLauncher(connStrs);
-            uploadLauncher.TableProcessor.TableProcessorBegin += HandleTableUploadBegin;
-            uploadLauncher.TableProcessor.TableProcessorEnd += HandleTableUploadEnd;
+            uploadLauncher.TableProcessor.TableProcessorBegin += eventHandler.HandleTableProcessorBegin;
+            uploadLauncher.TableProcessor.TableProcessorEnd += eventHandler.HandleTableProcessorEnd;
+            uploadLauncher.TableProcessor.TableProcessorException += eventHandler.HandleTableProcessorException;
 
             uploadLauncher.Launch();
 
@@ -58,29 +79,8 @@ namespace VfpToSqlBulkCopy.Console
 
                 File.WriteAllText(fileName, fileSb.ToString());
                 System.Console.Write(consoleSb.ToString());
-
             }
-
             
-        }
-
-        private void HandleTableUploadBegin(Object sender, TableProcessorBeginEventArgs args)
-        {
-            UploadBeginEventArgs = args;
-            System.Console.Write(String.Format("{0} - {1}", PadTableName(args.TableName), args.When.ToLongTimeString()));
-        }
-        private void HandleTableUploadEnd(Object sender, TableProcessorEndEventArgs args)
-        {
-            TimeSpan ts = args.When - UploadBeginEventArgs.When;
-            String duration = String.Format("{0:D2}:{1:D2}:{2:D2}:{3:D3}", ts.Hours, ts.Minutes, ts.Seconds,ts.Milliseconds);
-
-            System.Console.WriteLine(" " + args.When.ToLongTimeString() + " " + duration);
-        }
-        private void HandleTableUploadException(Object sender, TableProcessorErrorEventArgs args)
-        {
-            if (UploadExceptions == null)
-                UploadExceptions = new Dictionary<String, Exception>();
-            UploadExceptions.Add(args.TableName, args.Exception);
         }
 
 
