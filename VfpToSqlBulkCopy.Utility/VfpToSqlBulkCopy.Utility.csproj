@@ -42,33 +42,35 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsciiZeroMemoProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\AsciiZeroMemoProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\BeginUploadEventArgs.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="SetDeletedProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\EndUploadEventArgs.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\SetDeletedProcessor.cs" />
     <Compile Include="ITableNameProvider.cs" />
-    <Compile Include="ITableProcessor.cs" />
-    <Compile Include="NullDateProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\ITableProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\NullDateProcessor.cs" />
     <Compile Include="RestartParameter.cs" />
-    <Compile Include="SelectCommandStringProvider.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\SelectCommandStringProvider.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="ICommandStringProvider.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\ICommandStringProvider.cs" />
     <Compile Include="OleDbColumnDefinition.cs" />
     <Compile Include="OleDbSchemaProvider.cs" />
     <Compile Include="TableNameProvider.cs" />
-    <Compile Include="TableProcessor.cs" />
-    <Compile Include="TableProcessorBeginEventArgs.cs" />
-    <Compile Include="TableProcessorEndEventArgs.cs" />
-    <Compile Include="TableUploader.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\TableProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorBeginEventArgs.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorEndEventArgs.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\TableUploader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TableProcessorExceptionEventArgs.cs" />
-    <Compile Include="UpdateDateCommandStringProvider.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorExceptionEventArgs.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\UpdateDateCommandStringProvider.cs" />
     <Compile Include="UploadLauncher.cs" />
     <Compile Include="VfpConnectionStringBuilder.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\CompositeTableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\ConsoleTableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\ITableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\TextFileITableProcessorEventHandler.cs" />
-    <Compile Include="ZapProcessor.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\CompositeEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\ConsoleEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\IUploadEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TextFileEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\ZapProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="vfptosqlbulkcopy">

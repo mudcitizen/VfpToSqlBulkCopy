@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
 {
-    public class CompositeTableProcessorEventHandler : ITableProcessorEventHandler
+    public class CompositeEventHandler : IUploadEventHandler
     {
-        IEnumerable<ITableProcessorEventHandler> Handlers;
+        IEnumerable<IUploadEventHandler> Handlers;
 
-        public CompositeTableProcessorEventHandler(IEnumerable<ITableProcessorEventHandler> handlers)
+        public CompositeEventHandler(IEnumerable<IUploadEventHandler> handlers)
         {
             if (handlers == null)
                 throw new ArgumentNullException("Handlers is a requirement parameter");
@@ -19,21 +19,33 @@ namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
         }
         public void HandleTableProcessorBegin(object sender, TableProcessorBeginEventArgs args)
         {
-            foreach (ITableProcessorEventHandler handler in Handlers)
+            foreach (IUploadEventHandler handler in Handlers)
                 handler.HandleTableProcessorBegin(sender, args);
         }
 
         public void HandleTableProcessorEnd(object sender, TableProcessorEndEventArgs args)
         {
-            foreach (ITableProcessorEventHandler handler in Handlers)
+            foreach (IUploadEventHandler handler in Handlers)
                 handler.HandleTableProcessorEnd(sender, args);
         }
 
 
         public void HandleTableProcessorException(object sender, TableProcessorExceptionEventArgs args)
         {
-            foreach (ITableProcessorEventHandler handler in Handlers)
+            foreach (IUploadEventHandler handler in Handlers)
                 handler.HandleTableProcessorException(sender, args);
+        }
+
+        public void HandleUploadBegin(object sender, BeginUploadEventArgs args)
+        {
+            foreach (IUploadEventHandler handler in Handlers)
+                handler.HandleUploadBegin(sender, args);
+        }
+
+        public void HandleUploadEnd(object sender, EndUploadEventArgs args)
+        {
+            foreach (IUploadEventHandler handler in Handlers)
+                handler.HandleUploadEnd(sender, args);
         }
     }
 }

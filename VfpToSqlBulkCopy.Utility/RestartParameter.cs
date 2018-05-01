@@ -77,5 +77,10 @@ namespace VfpToSqlBulkCopy.Utility
             return false;
         }
 
+        public override string ToString()
+        {
+            return String.Format("Connection - {0} ; Table - {1}", ConnectionName, TableName);
+        }
+
     }
 }

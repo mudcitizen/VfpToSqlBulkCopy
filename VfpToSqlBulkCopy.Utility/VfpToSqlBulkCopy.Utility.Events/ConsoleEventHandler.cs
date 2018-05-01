@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
 {
-    public class ConsoleTableProcessorEventHandler : ITableProcessorEventHandler
+    public class ConsoleEventHandler : IUploadEventHandler
     {
         TableProcessorBeginEventArgs BeginEventArgs;
         readonly int TableNamePadFactor = 12;
+        IList<TableProcessorExceptionEventArgs> ExceptionsArgs;
 
-        public ConsoleTableProcessorEventHandler() { }
-        public ConsoleTableProcessorEventHandler(int tableNamePadFactor)
+
+        public ConsoleEventHandler() { }
+        public ConsoleEventHandler(int tableNamePadFactor)
         {
             TableNamePadFactor = tableNamePadFactor;
         }
@@ -32,7 +34,10 @@ namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
 
         public void HandleTableProcessorException(object sender, TableProcessorExceptionEventArgs args)
         {
-            Console.WriteLine(args.TableName + " " + args.Exception.ToString());
+
+            if (ExceptionsArgs == null)
+                ExceptionsArgs = new List<TableProcessorExceptionEventArgs>();
+            ExceptionsArgs.Add(args);
         }
 
         private String PadTableName(String tableName)
@@ -40,6 +45,25 @@ namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
             return tableName.PadRight(TableNamePadFactor);
         }
 
+        public void HandleUploadBegin(object sender, BeginUploadEventArgs args)
+        {
+  
+        }
+
+        public void HandleUploadEnd(object sender, EndUploadEventArgs args)
+        {
+            if (ExceptionsArgs != null)
+            {
+                Console.WriteLine("Exceptions occurred on the following tables");
+                Console.ReadKey();
+                foreach (TableProcessorExceptionEventArgs arg in ExceptionsArgs)
+                {
+                    Console.WriteLine("Table - {0} ; Exception - {1}", arg.TableName, arg.Exception);
+                    Console.ReadKey();
+                }
+
+            }
+        }
     }
     
 }

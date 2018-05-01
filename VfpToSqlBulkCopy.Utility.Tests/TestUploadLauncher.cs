@@ -65,12 +65,12 @@ namespace VfpToSqlBulkCopy.Utility.Tests
                 File.Delete(LogFileName);
 
 
-            IEnumerable<ITableProcessorEventHandler> ehs = new List<ITableProcessorEventHandler>()
+            IEnumerable<IUploadEventHandler> ehs = new List<IUploadEventHandler>()
             {
-                new ConsoleTableProcessorEventHandler(),
-                new TextFileITableProcessorEventHandler(LogFileName)
+                new ConsoleEventHandler(),
+                new TextFileEventHandler(LogFileName)
             };
-            ITableProcessorEventHandler eh = new CompositeTableProcessorEventHandler(ehs);
+            IUploadEventHandler eh = new CompositeEventHandler(ehs);
 
 
             TestContext.WriteLine(String.Format("{0} ; {1}", DateTime.Now.ToLongTimeString(), "Begin"));
