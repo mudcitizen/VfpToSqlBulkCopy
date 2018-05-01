@@ -43,7 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsciiZeroMemoProcessor.cs" />
+    <Compile Include="BeginUploadEventArgs.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="EndUploadEventArgs.cs" />
     <Compile Include="SetDeletedProcessor.cs" />
     <Compile Include="ITableNameProvider.cs" />
     <Compile Include="ITableProcessor.cs" />
@@ -64,10 +66,10 @@
     <Compile Include="UpdateDateCommandStringProvider.cs" />
     <Compile Include="UploadLauncher.cs" />
     <Compile Include="VfpConnectionStringBuilder.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\CompositeTableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\ConsoleTableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\ITableProcessorEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\TextFileITableProcessorEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\CompositeEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\ConsoleEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\IUploadEventHandler.cs" />
+    <Compile Include="VfpToSqlBulkCopy.Utility.EventHandlers\TextFileEventHandler.cs" />
     <Compile Include="ZapProcessor.cs" />
   </ItemGroup>
   <ItemGroup>

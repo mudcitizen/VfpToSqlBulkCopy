@@ -12,8 +12,6 @@ namespace VfpToSqlBulkCopy.Console
 {
     public class Uploader
     {
-        TableProcessorBeginEventArgs UploadBeginEventArgs;
-        IDictionary<String, Exception> UploadExceptions;
 
         public void Upload()
         {
@@ -41,54 +39,24 @@ namespace VfpToSqlBulkCopy.Console
                 logFileName = "TableProcessorEvents.Log";
             }
 
-            IList<ITableProcessorEventHandler> eventHandlers = new List<ITableProcessorEventHandler>()
+            IList<IUploadEventHandler> eventHandlers = new List<IUploadEventHandler>()
             {
-                new ConsoleTableProcessorEventHandler(),
-                new TextFileITableProcessorEventHandler(logFileName)
+                new ConsoleEventHandler(),
+                new TextFileEventHandler(logFileName)
             };
-            ITableProcessorEventHandler eventHandler = new CompositeTableProcessorEventHandler(eventHandlers);
 
+            IUploadEventHandler eventHandler = new CompositeEventHandler(eventHandlers);
 
             UploadLauncher uploadLauncher = new UploadLauncher(connStrs);
+            uploadLauncher.BeginUpload += eventHandler.HandleUploadBegin;
             uploadLauncher.TableProcessor.TableProcessorBegin += eventHandler.HandleTableProcessorBegin;
             uploadLauncher.TableProcessor.TableProcessorEnd += eventHandler.HandleTableProcessorEnd;
             uploadLauncher.TableProcessor.TableProcessorException += eventHandler.HandleTableProcessorException;
-
+            uploadLauncher.EndUpload += eventHandler.HandleUploadEnd;
             uploadLauncher.Launch();
-
-            if (UploadExceptions != null)
-            {
-
-                String fileName = "Exceptions.Log" + "_" + DateTime.Now.ToLongTimeString();
-
-                if (File.Exists(fileName))
-                    File.Delete(fileName);
-
-                StringBuilder consoleSb = new StringBuilder();
-                StringBuilder fileSb = new StringBuilder();
-                String header = "Problems were encountered with the following tables" + Environment.NewLine;
-                consoleSb.Append(header);
-                foreach (KeyValuePair<String, Exception> kvp in UploadExceptions)
-                {
-                    consoleSb.AppendLine(kvp.Key);
-                    fileSb.AppendLine(kvp.Key);
-                    fileSb.AppendLine(kvp.Value.ToString());
-                    fileSb.AppendLine(String.Empty);
-                }
-                consoleSb.AppendLine(String.Format("See {0} for details",fileName));
-
-                File.WriteAllText(fileName, fileSb.ToString());
-                System.Console.Write(consoleSb.ToString());
-            }
-            
+        
         }
-
-
-        private String PadTableName(String tableName)
-        {
-            return tableName.PadRight(12);
-        }
-
+        
         private String GetConnectionString(String connectionName, Boolean required)
         {
             ConnectionStringSettings css = ConfigurationManager.ConnectionStrings[connectionName];

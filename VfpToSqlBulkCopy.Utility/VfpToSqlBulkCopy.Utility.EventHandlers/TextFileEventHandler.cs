@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
 {
-    public class TextFileITableProcessorEventHandler : ITableProcessorEventHandler
+    public class TextFileEventHandler : IUploadEventHandler
     {
         String FileName;
         TableProcessorBeginEventArgs BeginEventArgs;
 
-        public TextFileITableProcessorEventHandler(String filename)
+        public TextFileEventHandler(String filename)
         {
             FileName = filename;
         }
@@ -38,6 +38,19 @@ namespace VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers
         {
             Write(String.Format("Table [0} ; Exception - {1}",args.TableName,args.Exception.ToString()));
 
+        }
+
+        public void HandleUploadBegin(object sender, BeginUploadEventArgs args)
+        {
+            Write(String.Format("Upload Begin - " + DateTime.Now.ToLongTimeString()));
+            foreach (String connStr in args.ConnectionStrings)
+                Write(connStr);
+            Write(String.Format("Restart - {0}", args.RestartParameter == null ? "None" : args.RestartParameter.ToString()));
+        }
+
+        public void HandleUploadEnd(object sender, EndUploadEventArgs args)
+        {
+            Write(String.Format("Upload Complete - " + DateTime.Now.ToLongTimeString()));
         }
 
         void Write(String txt)

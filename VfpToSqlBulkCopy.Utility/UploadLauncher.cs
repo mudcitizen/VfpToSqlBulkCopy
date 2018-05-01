@@ -17,9 +17,11 @@ namespace VfpToSqlBulkCopy.Utility
         IDictionary<String, String> ConnectionStrings;
         String SqlConnectionString;
         String HostConnectionString;
-        RestartParameter RestartParm;
+        RestartParameter RestartParameter;
         public TableProcessor TableProcessor { get; set; }
 
+        public EventHandler<BeginUploadEventArgs> BeginUpload;
+        public EventHandler<EndUploadEventArgs> EndUpload;
 
         public UploadLauncher(IDictionary<String, String> connStrs) : this(connStrs, null) { }
 
@@ -55,19 +57,19 @@ namespace VfpToSqlBulkCopy.Utility
                 }
             }
 
-            RestartParm = restartDetails;
+            RestartParameter = restartDetails;
             TableProcessor = new TableProcessor();
 
         }
 
         public void Launch()
         {
-
+            OnBeginUpload();
             ITableNameProvider tableNameProvider;
-            if (RestartParm == null)
+            if (RestartParameter == null)
                 tableNameProvider = new TableNameProvider(HostConnectionString);
             else
-                tableNameProvider = new TableNameProvider(HostConnectionString,RestartParm.SatisfiesFilter);
+                tableNameProvider = new TableNameProvider(HostConnectionString, RestartParameter.SatisfiesFilter);
 
             foreach (KeyValuePair<String, String> kvp in ConnectionStrings)
             {
@@ -85,7 +87,31 @@ namespace VfpToSqlBulkCopy.Utility
                     }
                 }
             }
+            OnEndUpload();
         }
+
+        private void OnBeginUpload()
+        {
+            EventHandler<BeginUploadEventArgs> handler = BeginUpload;
+            if (handler != null)
+            {
+                BeginUploadEventArgs args = new BeginUploadEventArgs();
+                args.ConnectionStrings = ConnectionStrings.Values;
+                args.RestartParameter = RestartParameter;
+                handler(this, args);
+            }
+
+        }
+
+        private void OnEndUpload()
+        {
+            EventHandler<EndUploadEventArgs> handler = EndUpload;
+            if (handler != null)
+            {
+                handler(this, new EndUploadEventArgs());
+            }
+        }
+
     }
 
 
