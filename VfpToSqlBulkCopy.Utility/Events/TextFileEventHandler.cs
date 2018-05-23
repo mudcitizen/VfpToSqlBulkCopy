@@ -36,7 +36,7 @@ namespace VfpToSqlBulkCopy.Utility.Events
 
         public void HandleTableProcessorException(object sender, TableProcessorExceptionEventArgs args)
         {
-            Write(String.Format("Table [0} ; Exception - {1}",args.TableName,args.Exception.ToString()));
+            Write(String.Format("Table {0} ; Exception - {1}",args.TableName,args.Exception.ToString()));
 
         }
 
