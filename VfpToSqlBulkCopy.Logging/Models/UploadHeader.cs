@@ -10,7 +10,8 @@ namespace VfpToSqlBulkCopy.Logging.Models
     {
         public int Id { get; set; }
         public DateTime? Begin { get; set; }
-        public DateTime? End { get; set; }      
+        public String ConnectionStrings { get; set; }
+        public String RestartDetails { get; set; }
 
         public ICollection<UploadDetail> UploadDetails { get; set; }
     }

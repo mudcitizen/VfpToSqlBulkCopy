@@ -6,7 +6,7 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using VfpToSqlBulkCopy.Utility;
-using VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers;
+using VfpToSqlBulkCopy.Utility.Events;
 
 namespace VfpToSqlBulkCopy.Console
 {
@@ -18,7 +18,7 @@ namespace VfpToSqlBulkCopy.Console
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             String connName;
             connName = VfpToSqlBulkCopy.Utility.Constants.ConnectionNames.Host;
-            connStrs.Add(connName, GetConnectionString(connName,true));
+            connStrs.Add(connName, GetConnectionString(connName, true));
             connName = VfpToSqlBulkCopy.Utility.Constants.ConnectionNames.Sql;
             connStrs.Add(connName, GetConnectionString(connName, true));
 
@@ -39,11 +39,15 @@ namespace VfpToSqlBulkCopy.Console
                 logFileName = "TableProcessorEvents.Log";
             }
 
+
             IList<IUploadEventHandler> eventHandlers = new List<IUploadEventHandler>()
             {
                 new ConsoleEventHandler(),
                 new TextFileEventHandler(logFileName)
             };
+
+
+            eventHandlers.Add(new VfpToSqlBulkCopy.Utility.Events.SqlEventHandler());
 
             IUploadEventHandler eventHandler = new CompositeEventHandler(eventHandlers);
 
@@ -54,9 +58,9 @@ namespace VfpToSqlBulkCopy.Console
             uploadLauncher.TableProcessor.TableProcessorException += eventHandler.HandleTableProcessorException;
             uploadLauncher.EndUpload += eventHandler.HandleUploadEnd;
             uploadLauncher.Launch();
-        
+
         }
-        
+
         private String GetConnectionString(String connectionName, Boolean required)
         {
             ConnectionStringSettings css = ConfigurationManager.ConnectionStrings[connectionName];
@@ -67,7 +71,7 @@ namespace VfpToSqlBulkCopy.Console
                 return null;
             else
                 throw new ApplicationException("No connection string found for " + connectionName);
-            
+
         }
     }
 }

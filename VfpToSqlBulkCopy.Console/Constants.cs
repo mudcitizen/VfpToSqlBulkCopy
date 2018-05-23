@@ -9,5 +9,6 @@ namespace VfpToSqlBulkCopy.Console
     public static class Constants
     {
         public static String TableProcessorEventsFileNameAppSettingsKey => "TableProcessorEventsFileName";
+        public static String EFUploadConnectionNameAppSettingsKey => "EFUploadConnectionName";
     }
 }

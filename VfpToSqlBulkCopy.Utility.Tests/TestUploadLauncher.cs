@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VfpToSqlBulkCopy.Utility.VfpToSqlBulkCopy.Utility.EventHandlers;
+using VfpToSqlBulkCopy.Utility.Events;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {

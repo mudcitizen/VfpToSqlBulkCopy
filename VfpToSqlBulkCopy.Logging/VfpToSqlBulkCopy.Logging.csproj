@@ -50,17 +50,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EfContexts\UploadContext.cs" />
-    <Compile Include="ITableUploadEventHandler.cs" />
+    <Compile Include="Migrations\201805222214041_InitialMigration.cs" />
+    <Compile Include="Migrations\201805222214041_InitialMigration.Designer.cs">
+      <DependentUpon>201805222214041_InitialMigration.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201805222218026_DropUPloadHeaderEnd.cs" />
+    <Compile Include="Migrations\201805222218026_DropUPloadHeaderEnd.Designer.cs">
+      <DependentUpon>201805222218026_DropUPloadHeaderEnd.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\UploadDetail.cs" />
     <Compile Include="Models\UploadHeader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VfpToSqlBulkCopy.Utility\VfpToSqlBulkCopy.Utility.csproj">
-      <Project>{d43f9fe7-8752-4fb7-99f1-4ea4a0dab155}</Project>
-      <Name>VfpToSqlBulkCopy.Utility</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -72,6 +73,13 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201805222214041_InitialMigration.resx">
+      <DependentUpon>201805222214041_InitialMigration.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201805222218026_DropUPloadHeaderEnd.resx">
+      <DependentUpon>201805222218026_DropUPloadHeaderEnd.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

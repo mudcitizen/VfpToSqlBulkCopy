@@ -14,8 +14,7 @@ namespace VfpToSqlBulkCopy.Logging.Tests
         [TestMethod]
         public void TestCreateAndPopulate()
         {
-            const String connName = "EFUpload";
-            UploadContext context = new UploadContext(connName);
+            UploadContext context = new UploadContext();
 
             UploadHeader header = new UploadHeader();
             header.Begin = DateTime.Now;
@@ -31,7 +30,6 @@ namespace VfpToSqlBulkCopy.Logging.Tests
                 UploadDetail dtl = new UploadDetail() { TableName = table, Begin = dt.AddMinutes(minutes++),End = dt.AddMinutes(minutes++),UploadHeader = header };
                 context.UploadDetails.Add(dtl);
             }
-            header.End = dt.AddMinutes(minutes++);
             context.SaveChanges();
             TestContext.WriteLine("Done - {0}", minutes);
         }

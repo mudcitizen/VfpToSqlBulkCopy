@@ -31,7 +31,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,35 +49,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\AsciiZeroMemoProcessor.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\BeginUploadEventArgs.cs" />
+    <Compile Include="Events\SqlEventHandler.cs" />
+    <Compile Include="TableProcessors\AsciiZeroMemoProcessor.cs" />
+    <Compile Include="Events\BeginUploadEventArgs.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\EndUploadEventArgs.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\SetDeletedProcessor.cs" />
+    <Compile Include="Events\EndUploadEventArgs.cs" />
+    <Compile Include="TableProcessors\SetDeletedProcessor.cs" />
     <Compile Include="ITableNameProvider.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\ITableProcessor.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\NullDateProcessor.cs" />
+    <Compile Include="TableProcessors\ITableProcessor.cs" />
+    <Compile Include="TableProcessors\NullDateProcessor.cs" />
     <Compile Include="RestartParameter.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\SelectCommandStringProvider.cs" />
+    <Compile Include="CommandStringProviders\SelectCommandStringProvider.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\ICommandStringProvider.cs" />
+    <Compile Include="CommandStringProviders\ICommandStringProvider.cs" />
     <Compile Include="OleDbColumnDefinition.cs" />
     <Compile Include="OleDbSchemaProvider.cs" />
     <Compile Include="TableNameProvider.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\TableProcessor.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorBeginEventArgs.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorEndEventArgs.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\TableUploader.cs" />
+    <Compile Include="TableProcessors\TableProcessor.cs" />
+    <Compile Include="Events\TableProcessorBeginEventArgs.cs" />
+    <Compile Include="Events\TableProcessorEndEventArgs.cs" />
+    <Compile Include="TableProcessors\TableUploader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TableProcessorExceptionEventArgs.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.CommandStringProviders\UpdateDateCommandStringProvider.cs" />
+    <Compile Include="Events\TableProcessorExceptionEventArgs.cs" />
+    <Compile Include="CommandStringProviders\UpdateDateCommandStringProvider.cs" />
     <Compile Include="UploadLauncher.cs" />
     <Compile Include="VfpConnectionStringBuilder.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\CompositeEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\ConsoleEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\IUploadEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.Events\TextFileEventHandler.cs" />
-    <Compile Include="VfpToSqlBulkCopy.Utility.TableProcessors\ZapProcessor.cs" />
+    <Compile Include="Events\CompositeEventHandler.cs" />
+    <Compile Include="Events\ConsoleEventHandler.cs" />
+    <Compile Include="Events\IUploadEventHandler.cs" />
+    <Compile Include="Events\TextFileEventHandler.cs" />
+    <Compile Include="TableProcessors\ZapProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="vfptosqlbulkcopy">
@@ -82,6 +90,16 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VfpToSqlBulkCopy.Logging\VfpToSqlBulkCopy.Logging.csproj">
+      <Project>{433693d1-b947-4a8b-9ce2-d2c34fe89cf0}</Project>
+      <Name>VfpToSqlBulkCopy.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

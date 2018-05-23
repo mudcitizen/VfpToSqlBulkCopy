@@ -6,6 +6,7 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VfpToSqlBulkCopy.Utility.Events;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {
@@ -53,6 +54,22 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             //    sqlConn.Close();
             //}
         }
+
+        [TestMethod]
+        public void TestTextFileEventHandler()
+        {
+            const String fileName = @"c:\temp\events.log";
+            BeginUploadEventArgs uploadBeginArgs = new BeginUploadEventArgs();
+            uploadBeginArgs.ConnectionStrings = new List<String>() { "connectionString1", "connectionString2" };
+            RestartParameter restartParm = new RestartParameter();
+            restartParm.TableName = "FUNG";
+            uploadBeginArgs.RestartParameter = restartParm;
+
+            IUploadEventHandler uploadEventHandler = new TextFileEventHandler(fileName);
+            uploadEventHandler.HandleUploadBegin(null,uploadBeginArgs);
+
+        }
+
 
         [TestMethod]
         public void TestLinkedServerUpload()

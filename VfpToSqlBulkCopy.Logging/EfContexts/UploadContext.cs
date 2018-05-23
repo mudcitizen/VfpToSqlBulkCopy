@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
 using System.Text;
@@ -10,9 +11,7 @@ namespace VfpToSqlBulkCopy.Logging.EfContexts
 {
     public class UploadContext : DbContext
     {
-        public UploadContext() : base() { Init();  }
-        public UploadContext(String connectionName) : base(connectionName) { Init(); }
-
+        public UploadContext() : base("EFUpload") { Init();  }
         public DbSet<UploadHeader> UploadHeaders { get; set; }
         public DbSet<UploadDetail> UploadDetails { get; set; }
 

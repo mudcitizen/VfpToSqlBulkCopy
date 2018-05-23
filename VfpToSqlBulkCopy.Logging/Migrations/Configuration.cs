@@ -19,7 +19,7 @@ namespace VfpToSqlBulkCopy.Logging.Migrations
 
         public Configuration()
         {
-            AutomaticMigrationsEnabled = true;
+            AutomaticMigrationsEnabled = false;
             AutomaticMigrationDataLossAllowed = true;
             ContextKey = "VfpToSqlBulkCopy.Logging.EfContexts.UploadContext";
         }
