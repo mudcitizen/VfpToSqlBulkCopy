@@ -16,9 +16,15 @@ namespace VfpToSqlBulkCopy.Utility
         public event EventHandler<TableProcessorEndEventArgs> TableProcessorEnd;
         public event EventHandler<TableProcessorExceptionEventArgs> TableProcessorException;
 
+        #region ctor
         public TableProcessor()
         {
-            Init(new List<ITableProcessor>() { new ZapProcessor(), new TableUploader(), new AsciiZeroMemoProcessor(), new NullDateProcessor(), new SetDeletedProcessor() });
+            BuildAndInit(new DefaultBatchSizeProvider());
+        }
+
+        public TableProcessor(IBatchSizeProvider batchSizeProvider)
+        {
+            BuildAndInit(batchSizeProvider);
         }
 
 
@@ -27,6 +33,19 @@ namespace VfpToSqlBulkCopy.Utility
             Init(tableProcessors);
 
         }
+        #endregion
+
+        #region Initialize
+        private void BuildAndInit(IBatchSizeProvider batchSizeProvider)
+        {
+            Init(new List<ITableProcessor>() { new ZapProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullDateProcessor(), new SetDeletedProcessor() });
+        }
+        private void Init(IEnumerable<ITableProcessor> tableProcessors)
+        {
+            _TableProcessors = tableProcessors;
+        }
+        #endregion
+
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
             destinationTableName = Helper.GetDestinationTableName(destinationTableName);
@@ -45,10 +64,8 @@ namespace VfpToSqlBulkCopy.Utility
             OnTableProcessorEnd(sourceTableName);
         }
 
-        private void Init(IEnumerable<ITableProcessor> tableProcessors)
-        {
-            _TableProcessors = tableProcessors;
-        }
+
+
 
         #region EventPublishers
         protected virtual void OnTableProcessorBegin(String tableName)

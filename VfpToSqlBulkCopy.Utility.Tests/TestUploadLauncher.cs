@@ -25,9 +25,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             connStrs.Add(Constants.ConnectionNames.Sql, LaptopSqlConnectionString);
             connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;");
-            //connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
+            connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
 
-            UploadLauncher ul = new UploadLauncher(connStrs, null);
+            UploadLauncher ul = new UploadLauncher(connStrs);
             LogFileName = "Laptop_Upload.Log";
             RunUploadLauncher(ul);
 

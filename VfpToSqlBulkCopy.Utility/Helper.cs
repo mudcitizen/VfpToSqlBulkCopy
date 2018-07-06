@@ -14,7 +14,7 @@ namespace VfpToSqlBulkCopy.Utility
     {
         public static String GetConnectionString(String connectionName)
         {
-            ConnectionStringSettings css = ConfigurationManager.ConnectionStrings[connectionName];
+            ConnectionStringSettings css = ConfigurationManager.ConnectionStrings[connectionName.ToUpper()];
             if (css == null)
                 return null;
             else

@@ -24,9 +24,12 @@ namespace VfpToSqlBulkCopy.Utility
         public EventHandler<BeginUploadEventArgs> BeginUpload;
         public EventHandler<EndUploadEventArgs> EndUpload;
 
-        public UploadLauncher(IDictionary<String, String> connStrs) : this(connStrs, null) { }
+        public UploadLauncher(IDictionary<String, String> connStrs) : this(connStrs, null, null) { }
 
-        public UploadLauncher(IDictionary<String, String> connStrs, RestartParameter restartDetails)
+        public UploadLauncher(IDictionary<String, String> connStrs, IBatchSizeProvider batchSizeProvider)
+        { }
+
+        public UploadLauncher(IDictionary<String, String> connStrs, IBatchSizeProvider batchSizeProvider, RestartParameter restartDetails)
         {
             ConnectionStrings = new Dictionary<String, String>();
             IList<String> connectionNames = new List<String>() { Constants.ConnectionNames.Host.ToUpper(), Constants.ConnectionNames.POS.ToUpper(), Constants.ConnectionNames.Sql.ToUpper() };
@@ -59,7 +62,8 @@ namespace VfpToSqlBulkCopy.Utility
             }
 
             RestartParameter = restartDetails;
-            TableProcessor = new TableProcessor();
+            batchSizeProvider = batchSizeProvider ?? new DiTableOrDefaultBatchSizeProvider(HostConnectionString);
+            TableProcessor = new TableProcessor(batchSizeProvider);
 
         }
 

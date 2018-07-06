@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Experiments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestBatchSizeProvider.cs" />
     <Compile Include="TestTableProcessor.cs" />
     <Compile Include="TestUploadLauncher.cs" />
     <Compile Include="TestRestartParameter.cs" />

@@ -46,5 +46,7 @@ namespace VfpToSqlBulkCopy.Utility
             public static String POS => "POS";
         }
 
+        public static int DefaultBatchSize => 25000;
+
     }
 }
