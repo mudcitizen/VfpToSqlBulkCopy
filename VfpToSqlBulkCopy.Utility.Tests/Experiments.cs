@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.SqlClient;
@@ -25,6 +26,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
         public TestContext TestContext { get; set; }
 
+
         [TestMethod]
         public void TestPathStuff()
         {
@@ -35,6 +37,24 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
         }
 
+        [TestMethod]
+        public void TestAppSettingsKeyNotFound()
+        {
+            var appSettings = ConfigurationManager.AppSettings;
+            String value;
+            try
+            {
+                value = appSettings["WTFO"];
+            }
+            catch (Exception ex)
+            {
+                value = ex.ToString();
+            }
+
+            Debug.WriteLine(value);
+
+            
+        }
 
 
         [TestMethod]

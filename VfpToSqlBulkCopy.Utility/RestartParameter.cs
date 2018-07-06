@@ -69,6 +69,10 @@ namespace VfpToSqlBulkCopy.Utility
                         greaterOrEqual = false;
                         break;
                     }
+                    if (tblNameChar[i] > _RestartTableChar[i])
+                    {
+                        break;
+                    }
                 }
                 return greaterOrEqual;
 

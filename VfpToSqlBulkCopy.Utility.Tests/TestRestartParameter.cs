@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
@@ -35,6 +37,19 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             Assert.IsFalse(parm.SatisfiesFilter(HostConnection, "AC_TRN"));
             Assert.IsFalse(parm.SatisfiesFilter(HostConnection, "RS_SKED"));
             Assert.IsTrue(parm.SatisfiesFilter(POSConnection, "PS_WTF"));
+        }
+        [TestMethod]
+        public void TestRestartPos()
+        {
+            RestartParameter parm = new RestartParameter() { ConnectionName = POSConnection, TableName = "PSINDX" };
+            TableNameProvider tnp = new TableNameProvider(Helper.GetConnectionString(HostConnection), parm.SatisfiesFilter);
+            IEnumerable<String> tables = tnp.GetTables(POSConnection, Helper.GetConnectionString(POSConnection));
+            foreach (String table in tables)
+            {
+                Debug.WriteLine(table);
+            }
+            Debug.WriteLine("here boss");
+
         }
     }
 }

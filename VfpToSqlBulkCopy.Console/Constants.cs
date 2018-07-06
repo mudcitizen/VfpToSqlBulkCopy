@@ -10,5 +10,11 @@ namespace VfpToSqlBulkCopy.Console
     {
         public static String TableProcessorEventsFileNameAppSettingsKey => "TableProcessorEventsFileName";
         public static String EFUploadConnectionNameAppSettingsKey => "EFUploadConnectionName";
+
+        public static class AppSettingKeys
+        {
+            public static String RestartConnectionName => "RestartConnectionName";
+            public static String RestartTableName => "RestartTableName";
+        }
     }
 }
