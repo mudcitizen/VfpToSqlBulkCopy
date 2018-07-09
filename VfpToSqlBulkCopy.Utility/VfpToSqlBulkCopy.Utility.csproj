@@ -58,6 +58,7 @@
     <Compile Include="Events\BeginUploadEventArgs.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Events\EndUploadEventArgs.cs" />
+    <Compile Include="TableProcessors\NumericScrubProcessor.cs" />
     <Compile Include="TableProcessors\SetDeletedProcessor.cs" />
     <Compile Include="ITableNameProvider.cs" />
     <Compile Include="TableProcessors\ITableProcessor.cs" />

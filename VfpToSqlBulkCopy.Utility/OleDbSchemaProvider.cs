@@ -22,7 +22,26 @@ namespace VfpToSqlBulkCopy.Utility
                 {
                     String name = row[Constants.OleDbSchemaColumnNames.Column].ToString();
                     OleDbType dbType = (OleDbType)row[Constants.OleDbSchemaColumnNames.DataType];
-                    OleDbColumnDefinition colDef = new OleDbColumnDefinition() { Name = name, Type = dbType };
+                    //if (name.ToUpper().StartsWith("PERCENT"))
+                    //{
+                    //    object np = row[15];
+                    //    object ns = row[16];
+                    //}
+
+                    int? numericPrecision;
+                    short? numericScale;
+                    if (dbType.ToString() == Constants.OleDbTypeNames.Numeric)
+                    {
+                        numericPrecision = (int?)row[Constants.OleDbSchemaColumnNames.NumericPrecision];
+                        numericScale = (short?)row[Constants.OleDbSchemaColumnNames.NumericScale];
+                    }
+                    else
+                    {
+                        numericPrecision = null;
+                        numericScale = null;
+                    }
+
+                    OleDbColumnDefinition colDef = new OleDbColumnDefinition() { Name = name, Type = dbType, NumericPrecision = numericPrecision, NumericScale = numericScale };
                     schema.Add(colDef.Name,colDef);
                 }
                 conn.Close();

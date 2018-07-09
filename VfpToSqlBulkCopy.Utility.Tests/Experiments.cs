@@ -7,6 +7,8 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VfpToSqlBulkCopy.Utility;
+using VfpToSqlBulkCopy.Utility.TableProcessors;
 using VfpToSqlBulkCopy.Utility.Events;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
@@ -27,6 +29,47 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public TestContext TestContext { get; set; }
 
 
+        [TestMethod]
+        public void TestNumericScrubProcessor()
+        {
+            //ITableProcessor tp = new NumericScrubProcessor();
+            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
+            NumericScrubProcessor tp = new NumericScrubProcessor();
+            tp.Process(LaptopHostConnectionString, "RS_POLCY", null, null);
+            foreach (String cmdStr in tp.CommandStrings)
+            {
+                TestContext.WriteLine(cmdStr);
+            }
+            TestContext.WriteLine("Here boss");
+        }
+
+        [TestMethod]
+        public void TestSchemaBuilder()
+        {
+            //ITableProcessor tp = new NumericScrubProcessor();
+            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
+            OleDbSchemaProvider sp = new OleDbSchemaProvider();
+            Dictionary<String, OleDbColumnDefinition> schema = sp.GetSchema(LaptopHostConnectionString, "RS_POLCY");
+            foreach (KeyValuePair<String, OleDbColumnDefinition> kvp in schema)
+            {
+                TestContext.WriteLine(String.Format("{0} - {1}", kvp.Key, kvp.Value.ToString()));
+            }
+            TestContext.WriteLine("Here boss");
+        }
+        [TestMethod]
+        public void TestReadNumericOverlows()
+        {
+            //ITableProcessor tp = new NumericScrubProcessor();
+            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
+            OleDbSchemaProvider sp = new OleDbSchemaProvider();
+            Dictionary<String, OleDbColumnDefinition> schema = sp.GetSchema(LaptopHostConnectionString, "RS_POLCY");
+            //DataTable dt = Helper.GetOleDbDataTable(LaptopHostConnectionString, "SELECT IIF(BETWEEN(Percent1,99.99,-99.99),Percent1,0) AS Percent1,Percent2, Percent3 FROM RS_POLCY");
+            //DataRow dr = dt.Rows[0];
+            
+            TestContext.WriteLine("Here boss");
+        }
+
+     
         [TestMethod]
         public void TestPathStuff()
         {

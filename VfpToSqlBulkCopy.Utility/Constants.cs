@@ -11,11 +11,14 @@ namespace VfpToSqlBulkCopy.Utility
         public static class OleDbTypeNames
         {
             public static String Date => "DBDate";
+            public static String Numeric => "Numeric";
         }
         public static class OleDbSchemaColumnNames
         {
             public static String Column => "COLUMN_NAME";
             public static String DataType => "DATA_TYPE";
+            public static String NumericPrecision => "NUMERIC_PRECISION";
+            public static String NumericScale => "NUMERIC_SCALE";
         }
         public static class SqlTypeNames
         {
