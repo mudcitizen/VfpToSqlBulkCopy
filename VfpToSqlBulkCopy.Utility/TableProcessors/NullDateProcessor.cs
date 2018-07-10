@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VfpToSqlBulkCopy.Utility.CommandStringProviders;
 
-namespace VfpToSqlBulkCopy.Utility
+namespace VfpToSqlBulkCopy.Utility.TableProcessors
 {
     public class NullDateProcessor : ITableProcessor
     {

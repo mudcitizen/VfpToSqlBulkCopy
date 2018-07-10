@@ -24,7 +24,7 @@ namespace VfpToSqlBulkCopy.Utility.CommandStringProviders
                 {
                     sb.Append(comma);
                     comma = ", ";
-                    String clause = String.Format(" {0} = (CASE WHEN {0} <= '{1}' THEN NULL ELSE {0} END)", "[" + row[0].ToString() + "]",Constants.SqlDateMinValue);
+                    String clause = String.Format(" {0} = (CASE WHEN {0} <= '{1}' THEN NULL ELSE {0} END)", Helper.GetDestinationColumnName(row[0].ToString()),Constants.SqlDateMinValue);
                     sb.Append(clause);
                 }
                 cmdStr = sb.ToString();

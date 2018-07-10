@@ -115,7 +115,7 @@ namespace VfpToSqlBulkCopy.Utility
             return tableName.Replace('-', '_');
         }
 
-        public static String GetColumnName(String columnName)
+        public static String GetDestinationColumnName(String columnName)
         {
             return "[" + columnName + "]";
         }

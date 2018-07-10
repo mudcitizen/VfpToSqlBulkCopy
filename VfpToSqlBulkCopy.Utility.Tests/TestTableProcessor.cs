@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VfpToSqlBulkCopy.Utility.CommandStringProviders;
-using VfpToSqlBulkCopy.Utility.Events;
+using VfpToSqlBulkCopy.Utility.TableProcessors;
 
 namespace VfpToSqlBulkCopy.Utility.Tests
 {

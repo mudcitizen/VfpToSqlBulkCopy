@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VfpToSqlBulkCopy.Utility.Events;
+using VfpToSqlBulkCopy.Utility;
 
-namespace VfpToSqlBulkCopy.Utility
+namespace VfpToSqlBulkCopy.Utility.TableProcessors
 {
     public class TableProcessor : ITableProcessor
     {
@@ -38,7 +39,7 @@ namespace VfpToSqlBulkCopy.Utility
         #region Initialize
         private void BuildAndInit(IBatchSizeProvider batchSizeProvider)
         {
-            Init(new List<ITableProcessor>() { new ZapProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullDateProcessor(), new SetDeletedProcessor() });
+            Init(new List<ITableProcessor>() { new ZapProcessor(), new NumericScrubProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullCharacterScrubber(), new NullDateProcessor(), new SetDeletedProcessor() });
         }
         private void Init(IEnumerable<ITableProcessor> tableProcessors)
         {

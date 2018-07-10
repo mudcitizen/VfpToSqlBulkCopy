@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VfpToSqlBulkCopy.Utility
+namespace VfpToSqlBulkCopy.Utility.TableProcessors
 {
     public class SetDeletedProcessor : ITableProcessor
     {

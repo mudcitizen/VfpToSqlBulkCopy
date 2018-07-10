@@ -22,6 +22,7 @@ namespace VfpToSqlBulkCopy.Utility
         }
         public static class SqlTypeNames
         {
+            public static String Char => "char";
             public static String Date => "date";
             public static String DateTime => "datetime";
         }

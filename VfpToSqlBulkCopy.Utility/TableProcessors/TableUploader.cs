@@ -10,7 +10,7 @@ using System.Data.SqlClient;
 using System.IO;
 using vfptosqlbulkcopy;
 
-namespace VfpToSqlBulkCopy.Utility
+namespace VfpToSqlBulkCopy.Utility.TableProcessors
 {
     public class TableUploader : ITableProcessor
     {

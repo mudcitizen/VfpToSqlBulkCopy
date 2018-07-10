@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using vfptosqlbulkcopy;
 
-namespace VfpToSqlBulkCopy.Utility
+namespace VfpToSqlBulkCopy.Utility.TableProcessors
 {
     public class AsciiZeroMemoProcessor : ITableProcessor
     {

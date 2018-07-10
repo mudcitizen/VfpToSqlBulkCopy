@@ -82,13 +82,11 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
                 DataTable dt = Helper.GetOleDbDataTable(connectionString, commandString);
                 success = true;
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                System.Diagnostics.Debug.WriteLine(ex.GetType());
             }
-            catch (System.Data.OleDb.OleDbException ex)
+            catch (System.Data.OleDb.OleDbException)
             {
-                System.Diagnostics.Debug.WriteLine(ex.GetType());
             }
             return success;
             }

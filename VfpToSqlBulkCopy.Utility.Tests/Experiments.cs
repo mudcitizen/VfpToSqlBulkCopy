@@ -42,6 +42,15 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             }
             TestContext.WriteLine("Here boss");
         }
+        [TestMethod]
+        public void TestNullCharacterScrubber()
+        {
+            //ITableProcessor tp = new NumericScrubProcessor();
+            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
+            ITableProcessor tp = new NullCharacterScrubber();
+            tp.Process(LaptopHostConnectionString, "IN_TRN",Helper.GetConnectionString("Host"),"IN_TRN");
+            TestContext.WriteLine("Here boss");
+        }
 
         [TestMethod]
         public void TestSchemaBuilder()
