@@ -27,15 +27,18 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
             String cmdStr = "SELECT column_name,DATA_TYPE FROM INFORMATION_SCHEMA.Columns where Table_Name = '" + destinationTableName + "'";
             DataTable dt = Helper.GetSqlDataTable(destinationConnectionString, cmdStr);
 
+            int charTypeRows = 0;
             foreach (DataRow row in dt.Rows)
             {
                 String colName = row[0].ToString();
                 if (colName.Equals(Constants.DILayer.RecnoColumnName, StringComparison.InvariantCultureIgnoreCase))
                     break;
 
-                if (row[1].ToString().Equals(Constants.SqlTypeNames.Char,StringComparison.InvariantCultureIgnoreCase))
+                if (row[1].ToString().Equals(Constants.SqlTypeNames.Char, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Helper.GetDestinationColumnName(colName);
+
+                    charTypeRows++;
+                    colName = Helper.GetDestinationColumnName(colName);
                     updateClause.Append(comma + String.Format("{0} = REPLACE({0},CHAR(0),' ')", colName));
                     comma = ",";
                     whereClause.Append(or + String.Format("CHARINDEX(CHAR(0),{0}) > 0", colName));
@@ -43,8 +46,11 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
                 }
             }
 
-            cmdStr = String.Format("UPDATE {0} SET {1} WHERE SqlRecNo IN (SELECT SqlRecNo FROM {0} WHERE {2})", destinationTableName, updateClause.ToString(), whereClause.ToString());
-            Helper.ExecuteSqlNonQuery(destinationConnectionString, cmdStr);
+            if (charTypeRows > 0)
+            {
+                cmdStr = String.Format("UPDATE {0} SET {1} WHERE SqlRecNo IN (SELECT SqlRecNo FROM {0} WHERE {2})", destinationTableName, updateClause.ToString(), whereClause.ToString());
+                Helper.ExecuteSqlNonQuery(destinationConnectionString, cmdStr);
+            }
 
         }
     }

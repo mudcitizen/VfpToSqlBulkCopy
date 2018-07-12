@@ -16,7 +16,7 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
 
         This class corrects the above problems... 
     */
-    
+
     public class NumericScrubProcessor : ITableProcessor
     {
         // This is just a debugging thing....
@@ -31,8 +31,9 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
             OleDbSchemaProvider schemaProvider = new OleDbSchemaProvider();
             Dictionary<String, OleDbColumnDefinition> schema = schemaProvider.GetSchema(sourceConnectionString, sourceTableName);
 
-
             IEnumerable<OleDbColumnDefinition> numericColDefs = schema.Values.Where(colDef => colDef.Type == System.Data.OleDb.OleDbType.Numeric).ToList();
+            if (numericColDefs.Count() == 0)
+                return;
 
             String comma = String.Empty;
             StringBuilder sb = new StringBuilder().Append("SELECT ");
@@ -66,7 +67,7 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
                         cmdStr = String.Format("UPDATE {0} SET {1} = 0 WHERE NOT BETWEEN({1},-{2},{2})", sourceTableName, colDef.Name, maxVal);
                         CommandStrings.Add(cmdStr);
                         Helper.ExecuteOleDbNonQuery(sourceConnectionString, cmdStr);
-                    }                    
+                    }
                 }
             }
 
@@ -89,6 +90,6 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
             {
             }
             return success;
-            }
+        }
     }
 }

@@ -30,26 +30,17 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
 
         [TestMethod]
-        public void TestNumericScrubProcessor()
+        public void TestNullScrubOnTableWithNoCharacterFields()
         {
-            //ITableProcessor tp = new NumericScrubProcessor();
-            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
-            NumericScrubProcessor tp = new NumericScrubProcessor();
-            tp.Process(LaptopHostConnectionString, "RS_POLCY", null, null);
-            foreach (String cmdStr in tp.CommandStrings)
-            {
-                TestContext.WriteLine(cmdStr);
-            }
-            TestContext.WriteLine("Here boss");
+            const String tableName = "IN_UNILK";
+            const String sqlConnStr = "Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
+
+            ITableProcessor tp = new NullCharacterScrubber();
+            tp.Process(hostConnStr, tableName, sqlConnStr, tableName);
         }
         [TestMethod]
         public void TestNullCharacterScrubber()
         {
-            //ITableProcessor tp = new NumericScrubProcessor();
-            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
-            ITableProcessor tp = new NullCharacterScrubber();
-            tp.Process(LaptopHostConnectionString, "IN_TRN",Helper.GetConnectionString("Host"),"IN_TRN");
-            TestContext.WriteLine("Here boss");
         }
 
         [TestMethod]
