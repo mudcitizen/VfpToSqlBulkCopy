@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.OleDb;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,10 +23,16 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
         // This is just a debugging thing....
         public IList<String> CommandStrings { get; }
 
-        public NumericScrubProcessor()
+        private IBatchSizeProvider BatchSizeProvider;
+
+        public NumericScrubProcessor() : this(null) { }
+
+        public NumericScrubProcessor(IBatchSizeProvider batchSizeProvider)
         {
             CommandStrings = new List<String>();
+            BatchSizeProvider = batchSizeProvider ?? new DefaultBatchSizeProvider();
         }
+
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
             OleDbSchemaProvider schemaProvider = new OleDbSchemaProvider();
@@ -35,43 +42,81 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
             if (numericColDefs.Count() == 0)
                 return;
 
-            String comma = String.Empty;
-            StringBuilder sb = new StringBuilder().Append("SELECT ");
-            // if we can read all the numerics we're good-to-go 
-            foreach (OleDbColumnDefinition colDef in numericColDefs)
-            {
-                sb.Append(comma + colDef.Name);
-                comma = ",";
-            }
+            VfpConnectionStringBuilder vfpConnStrBldr = new VfpConnectionStringBuilder(sourceConnectionString);
+            sourceConnectionString = vfpConnStrBldr.ConnectionString;
 
-            sb.Append(" FROM " + sourceTableName);
+            int batchSize = BatchSizeProvider.GetBatchSize(sourceTableName);
+            int recordCount = Convert.ToInt32(Helper.GetOleDbScaler(sourceConnectionString, "SELECT COUNT(*) FROM " + sourceTableName));
 
-            if (!TryRead(sourceConnectionString, sb.ToString()))
+            using (OleDbConnection sourceConnection = new OleDbConnection(sourceConnectionString))
             {
-                // go at it column by column. If we can't read it then udpate it...
+                sourceConnection.Open();
+
+                int minRecno, maxRecno, recsProcessed;
+                recsProcessed = 0;
+
+                String comma = String.Empty;
+                String columnList = String.Empty;
+
+                StringBuilder sb = new StringBuilder().Append("SELECT ");
                 foreach (OleDbColumnDefinition colDef in numericColDefs)
                 {
-                    String cmdStr = String.Format("SELECT {0} FROM {1}", colDef.Name, sourceTableName);
-                    if (!TryRead(sourceConnectionString, cmdStr))
-                    {
-                        String maxVal;
-                        if (colDef.NumericScale > 0)
-                        {
-                            // 4,2 - -9.99 - 99.99
-                            maxVal = new String('9', (int)(colDef.NumericPrecision - colDef.NumericScale)) + "." + new String('9', (int)colDef.NumericScale);
-                        }
-                        else
-                        {
-                            maxVal = new String('9', (int)(colDef.NumericPrecision));
-                        }
-                        cmdStr = String.Format("UPDATE {0} SET {1} = 0 WHERE NOT BETWEEN({1},-{2},{2})", sourceTableName, colDef.Name, maxVal);
-                        CommandStrings.Add(cmdStr);
-                        Helper.ExecuteOleDbNonQuery(sourceConnectionString, cmdStr);
-                    }
+                    sb.Append(comma + colDef.Name);
+                    comma = ",";
                 }
+
+                sb.Append(" FROM " + sourceTableName + " WHERE ");
+
+                String selectAllColsCmdStr = sb.ToString();
+
+                while (true)
+                {
+                    minRecno = recsProcessed;
+                    maxRecno = minRecno + batchSize;
+
+                    // SELECT <all numeric cols> FROM <> RECNO() > 0 and RECNO() <= 25000
+
+                    if (!TryRead(sourceConnectionString, String.Format(selectAllColsCmdStr + GetRecNoWhereClause(minRecno, maxRecno))))
+                    {
+                        // if we cant read all the numerics we're good-to-go.  Otherwise we'll go column-by-column
+                        foreach (OleDbColumnDefinition colDef in numericColDefs)
+                        {
+                            String recnoWhereClause = GetRecNoWhereClause(minRecno, maxRecno);
+                            String cmdStr = String.Format("SELECT {0} FROM {1} WHERE {2}", colDef.Name, sourceTableName, recnoWhereClause);
+                            if (!TryRead(sourceConnectionString, cmdStr))
+                            {
+                                String maxVal;
+                                if (colDef.NumericScale > 0)
+                                {
+                                    // 4,2 - -9.99 - 99.99
+                                    maxVal = new String('9', (int)(colDef.NumericPrecision - colDef.NumericScale)) + "." + new String('9', (int)colDef.NumericScale);
+                                }
+                                else
+                                {
+                                    maxVal = new String('9', (int)(colDef.NumericPrecision));
+                                }
+                                cmdStr = String.Format("UPDATE {0} SET {1} = 0 WHERE NOT BETWEEN({1},-{2},{2}) AND {3}", sourceTableName, colDef.Name, maxVal, recnoWhereClause);
+                                CommandStrings.Add(cmdStr);
+                                Helper.ExecuteOleDbNonQuery(sourceConnectionString, cmdStr);
+                            }
+                        }
+                    }
+
+                    recsProcessed = recsProcessed + batchSize;
+                    if (recsProcessed >= recordCount)
+                        break;
+                }
+
+                sourceConnection.Close();
             }
 
             return;
+
+        }
+
+        String GetRecNoWhereClause(int minRecNo, int maxRecNo)
+        {
+            return String.Format(" RECNO() > {0} AND RECNO() <= {1} ", Convert.ToString(minRecNo), Convert.ToString(maxRecNo));
         }
 
         private Boolean TryRead(String connectionString, String commandString)
@@ -91,5 +136,6 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
             }
             return success;
         }
+
     }
 }

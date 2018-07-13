@@ -36,8 +36,21 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             const String sqlConnStr = "Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
 
             ITableProcessor tp = new NullCharacterScrubber();
-            tp.Process(hostConnStr, tableName, sqlConnStr, tableName);
+            tp.Process(LaptopHostConnectionString, tableName, sqlConnStr, tableName);
         }
+
+        [TestMethod]
+        public void TestNumericScrubProcessorOnLargeTable()
+        {
+            const String tableName = "DP_CHRVL";
+            const String connStr = @"Provider=VFPOLEDB.1;Data Source=I:\Kohler\HOSTDEMO;Collating Sequence=general;DELETED=False;";
+            NumericScrubProcessor tp = new NumericScrubProcessor();
+            tp.Process(connStr, tableName, null,null);
+            foreach (String cmdStr in tp.CommandStrings)
+                TestContext.WriteLine(cmdStr);
+            TestContext.WriteLine("Here boss");
+        }
+
         [TestMethod]
         public void TestNullCharacterScrubber()
         {
@@ -57,19 +70,46 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             TestContext.WriteLine("Here boss");
         }
         [TestMethod]
-        public void TestReadNumericOverlows()
+        public void TestNumericScrubProcessor()
         {
-            //ITableProcessor tp = new NumericScrubProcessor();
-            //tp.Process(LaptopHostConnectionString, "RS_POLCY",null,null);
-            OleDbSchemaProvider sp = new OleDbSchemaProvider();
-            Dictionary<String, OleDbColumnDefinition> schema = sp.GetSchema(LaptopHostConnectionString, "RS_POLCY");
-            //DataTable dt = Helper.GetOleDbDataTable(LaptopHostConnectionString, "SELECT IIF(BETWEEN(Percent1,99.99,-99.99),Percent1,0) AS Percent1,Percent2, Percent3 FROM RS_POLCY");
-            //DataRow dr = dt.Rows[0];
-            
+            /*
+             * 
+             * Here is the VFP code to generate test data
+             * 
+             * CLOSE DATABASES 
+             * USE RS_POLCY Exclusive
+             * ZAP 
+             * FOR lni = 1 TO 3
+               * LOCAL lcI
+               * lcI = ALLTRIM(STR(lni)) 
+               * SCATTER NAME loRec BLANK 
+               * lc = 'loRec.Advance{1} = 1000'
+               * lc = STRTRAN(lc,'{1}',lci) 
+               * &lc 
+               * lc = 'loRec.TimeUnit{1} = 1000'
+               * lc = STRTRAN(lc,'{1}',lcI) 
+               * &lc 
+               * lc = 'loRec.Percent{1} = 100.0'
+               * lc = STRTRAN(lc,'{1}',lcI) 
+               * &lc 
+               * INSERT INTO RS_POLCY FROM NAME loRec 
+             * NEXT 
+             * 
+             * LIST 
+             * USE 
+             * RETURN 
+             */
+
+            NumericScrubProcessor nsp = new NumericScrubProcessor(new ConstantBatchSizeProvider(1));
+            nsp.Process(LaptopHostConnectionString, "RS_POLCY", null, null);
+            foreach (String cmdStr in nsp.CommandStrings)
+            {
+                TestContext.WriteLine(cmdStr);
+            }
             TestContext.WriteLine("Here boss");
         }
 
-     
+
         [TestMethod]
         public void TestPathStuff()
         {
@@ -96,7 +136,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             Debug.WriteLine(value);
 
-            
+
         }
 
 
@@ -129,53 +169,12 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             uploadBeginArgs.RestartParameter = restartParm;
 
             IUploadEventHandler uploadEventHandler = new TextFileEventHandler(fileName);
-            uploadEventHandler.HandleUploadBegin(null,uploadBeginArgs);
+            uploadEventHandler.HandleUploadBegin(null, uploadBeginArgs);
 
         }
 
 
-        [TestMethod]
-        public void TestLinkedServerUpload()
-        {
-            String dataSource = @"D:\GDPR\VHOST\";
-            //String dataSource = @"D:\Essex\HostDema\";
-            String tableName = "IN_MSG";
-            String dropTable = "if exists(SELECT Table_Name FROM test.INFORMATION_SCHEMA.Tables where Table_Name = 'wtf')   drop table test.dbo.wtf";
-            String dropLinkedServer = "if exists(select * from sys.servers where name = N'VFPTOSQL') EXEC master.sys.sp_dropserver 'VFPTOSQL','droplogins'";
-            String addLinkedServer = String.Format(@"EXEC master.dbo.sp_addlinkedserver @server = N'VFPTOSQL', @srvproduct=N'', @provider=N'VFPOLEDB', @datasrc=N'{0}'", dataSource);
-            String uploadData = String.Format("select * into test.dbo.wtf from OpenQuery(VFPTOSQL,'SELECT * FROM {0}')", tableName);
-
-
-            using (SqlConnection sqlConn = new SqlConnection(TestDbConnectionString))
-            {
-                sqlConn.Open();
-                // Drop Table
-                using (SqlCommand sqlCmd = new SqlCommand(dropTable, sqlConn))
-                {
-                    sqlCmd.ExecuteNonQuery();
-                }
-                // Drop LinkedServer 
-                using (SqlCommand sqlCmd = new SqlCommand(dropLinkedServer, sqlConn))
-                {
-                    sqlCmd.ExecuteNonQuery();
-                }
-                // Add LinkedServer 
-                using (SqlCommand sqlCmd = new SqlCommand(addLinkedServer, sqlConn))
-                {
-                    sqlCmd.ExecuteNonQuery();
-                }
-
-                // Upload
-                using (SqlCommand sqlCmd = new SqlCommand(uploadData, sqlConn))
-                {
-                    sqlCmd.CommandTimeout = 0;
-                    sqlCmd.ExecuteNonQuery();
-                }
-
-                sqlConn.Close();
-            }
-        }
-
+    
 
 
         void WriteBoth(String txt)
@@ -183,6 +182,19 @@ namespace VfpToSqlBulkCopy.Utility.Tests
             String s = DateTime.Now.ToLongTimeString() + " " + txt;
             System.Diagnostics.Debug.WriteLine(s);
             TestContext.WriteLine(s);
+        }
+    }
+
+    class ConstantBatchSizeProvider : IBatchSizeProvider
+    {
+        int BatchSize;
+        internal ConstantBatchSizeProvider(int batchSize)
+        {
+            BatchSize = batchSize;
+        }
+        public int GetBatchSize(string tableName)
+        {
+            return BatchSize;
         }
     }
 }
