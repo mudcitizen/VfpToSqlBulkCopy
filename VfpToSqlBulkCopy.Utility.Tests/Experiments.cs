@@ -28,6 +28,16 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
         public TestContext TestContext { get; set; }
 
+        [TestMethod]
+        public void TestEssexInWMailUpload()
+        {
+            const String tableName = "IN_WMAIL";
+
+            ITableProcessor tp = new TableUploader(new DiTableOrDefaultBatchSizeProvider(EssexHostConnectionString));
+            tp.Process(EssexHostConnectionString, tableName, EssexSqlConnectionString, tableName);
+        }
+
+
 
         [TestMethod]
         public void TestNullScrubOnTableWithNoCharacterFields()

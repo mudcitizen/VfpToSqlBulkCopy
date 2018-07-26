@@ -15,7 +15,7 @@ namespace VfpToSqlBulkCopy.Utility
             DataTable dt = Helper.GetOleDbDataTable(hostConnectionString, "SELECT Table,BatchSize FROM DITABLE WHERE BatchSize <> 0");
             foreach (DataRow row in dt.Rows)
             {
-                String table = ((String)row[0]).ToUpper();
+                String table = ((String)row[0]).ToUpper().Trim();
                 int batchSize = (int)row[1];
                 CustomBatchSizes.Add(new KeyValuePair<String, int>(table,batchSize));
             }
