@@ -18,13 +18,18 @@ namespace VfpToSqlBulkCopy.Utility
             if (css == null)
                 return null;
             else
+                if (css.ConnectionString.Contains(Constants.ConnectionStringTerms.VfpOleDbProvider))
+            {
+                return ScrubVfpConnectionString(css.ConnectionString);
+            }
+            else
                 return css.ConnectionString;
         }
 
         public static Object GetOleDbScaler(String connectionString, string cmdStr)
         {
             Object result = null;
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            using (OleDbConnection conn = new OleDbConnection(ScrubVfpConnectionString(connectionString)))
             {
                 using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
                 {
@@ -38,7 +43,7 @@ namespace VfpToSqlBulkCopy.Utility
         public static DataTable GetOleDbDataTable(String connectionString, string cmdStr)
         {
             DataTable result = null;
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            using (OleDbConnection conn = new OleDbConnection(ScrubVfpConnectionString(connectionString)))
             {
                 using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
                 {
@@ -85,7 +90,7 @@ namespace VfpToSqlBulkCopy.Utility
         public static void ExecuteOleDbNonQuery(String connectionString, string cmdStr)
         {
             Object result = null;
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            using (OleDbConnection conn = new OleDbConnection(ScrubVfpConnectionString(connectionString)))
             {
                 using (OleDbCommand cmd = new OleDbCommand(cmdStr, conn))
                 {
@@ -118,6 +123,12 @@ namespace VfpToSqlBulkCopy.Utility
         public static String GetDestinationColumnName(String columnName)
         {
             return "[" + columnName + "]";
+        }
+
+        static String ScrubVfpConnectionString(String connectionString)
+        {
+            return new VfpConnectionStringBuilder(connectionString).ConnectionString;
+
         }
 
     }

@@ -10,8 +10,8 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     public class TestUploadLauncher
     {
         String LogFileName;
-        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;";
-        const String LaptopPosConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vpos;Collating Sequence=general;DELETED=False;";
+        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;";
+        const String LaptopPosConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vpos;";
         const String LaptopSqlConnectionString = @"Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
 
         public TestContext TestContext { get; set; }
@@ -24,7 +24,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             IDictionary<String, String> connStrs = new Dictionary<String, String>();
             connStrs.Add(Constants.ConnectionNames.Sql, LaptopSqlConnectionString);
-            connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;");
+            connStrs.Add(Constants.ConnectionNames.Host, @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost");
             connStrs.Add(Constants.ConnectionNames.POS, LaptopPosConnectionString);
 
             UploadLauncher ul = new UploadLauncher(connStrs);
@@ -35,7 +35,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         [TestMethod]
         public void TestEssexUpload()
         {
-            const String HostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=machine;DELETED=False;";
+            const String HostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema";
             const String SqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
 
             Helper.ExecuteSqlNonQuery(SqlConnectionString, @"USE[master] RESTORE DATABASE[Essex_22_000211] FROM DISK = N'D:\Essex\Hostdema\Essex_22_000211.bak' WITH FILE = 1, NOUNLOAD, STATS = 5");

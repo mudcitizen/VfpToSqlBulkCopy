@@ -10,7 +10,6 @@ namespace VfpToSqlBulkCopy.Utility
     {
         private String _ConnectionName;
         private String _TableName;
-        private char[] _RestartTableChar;
         public String ConnectionName
         {
             get { return _ConnectionName; }
@@ -21,18 +20,17 @@ namespace VfpToSqlBulkCopy.Utility
             get { return _TableName; }
             set {
                 _TableName = value.Trim().ToUpper();
-                _RestartTableChar = _TableName.ToCharArray();
             }
         }
 
-        public Boolean SatisfiesFilter(String connectionNameBeingProcessed, String tableName)
+        public Boolean SatisfiesFilter(String connectionNameBeingProcessed, String inTableName)
         {
             /*
              * An assumption is that we always process Host before POS - but this 
              * will be called for both Host and POS connection names
              */
 
-            String tblName = tableName.ToUpper();
+            String tblName = inTableName.Trim().ToUpper();
 
             // processing Host and restarting on POS then we skip all Host files
             if ((connectionNameBeingProcessed.Equals(Constants.ConnectionNames.Host, StringComparison.InvariantCultureIgnoreCase)) && (ConnectionName.Equals(Constants.ConnectionNames.POS, StringComparison.InvariantCultureIgnoreCase)))
@@ -49,35 +47,39 @@ namespace VfpToSqlBulkCopy.Utility
                     return true;
 
                 /*
-                 *  Totally hozed by String.Compare.  It's now "down" with ASCII stuff
-                 *  saying PS_WTF is before / less than PSCHK whereas VFP says 
-                 *  PS_WTF > PSCHK.  
+                 * When I 1st wrote this I used String.Compare() and got hozed because I wasn't thinking about
+                 * "What collation is being used here?"  And I got results different than what I expected - which
+                 * was "How would VFP sort?"  
                  * 
-                 *  StringCompare says '_' comes before 'C' but it you just do a character
-                 *  character-by-character compare we get the result we want..
-                if (String.Compare(tableName, TableName) >= 0)
-                    return true;
-                    */
+                 * Everything we do in VFP uses MACHINE collation. 
+                 *  
+                 * Windows doesn't use machine collation - at least by default
+                 * when I do dir/b sy*.dbf /on > a.txt I get
+                 * 
+                 * SY_COMM.DBF
+                 * SY_LOG.DBF
+                 * SYBIGCMD.DBF
+                 * SYCCTYP.DBF
+                 * SYCFGCHD.DBF
+                 * SYCFGCHH.DBF
+                 * SYEUMLOG.DBF
+                 * SYEUMREQ.DBF
+                 * SYGRDCOL.DBF
+                 * SYIMPRTD.DBF
 
-                char[] tblNameChar = tblName.ToCharArray();
-                Boolean greaterOrEqual = true;
-                int iterCount = tblNameChar.Length > _RestartTableChar.Length ? _RestartTableChar.Length : tblNameChar.Length;
-                for(int i = 0; i < iterCount; i++)
-                {
-                    if (tblNameChar[i] < _RestartTableChar[i])
-                    {
-                        greaterOrEqual = false;
-                        break;
-                    }
-                    if (tblNameChar[i] > _RestartTableChar[i])
-                    {
-                        break;
-                    }
-                }
-                return greaterOrEqual;
+                 * And if I built an index on DITABLE specifying general collation I'd get the same thing
+                 * 
+                 * Our config.fpw has collate=MACHINE - and with that collation the SY_*.DBF are at the bottom
+                 * of the list
+                 * 
+                 * * Now I know about String.CompareOrdinal() .... 
+                 * 
+                 */
 
+                return (String.CompareOrdinal(inTableName, TableName) >= 0);
 
             }
+
             return false;
         }
 

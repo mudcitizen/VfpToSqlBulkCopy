@@ -10,7 +10,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     {
 
         public TestContext TestContext { get; set; }
-        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=machine;DELETED=False;";
+        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;";
         [TestMethod]
         public void TestMethod1()
         {

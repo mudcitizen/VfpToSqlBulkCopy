@@ -20,21 +20,32 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         const String SqlConnectionName = "Sql";
         const String TestDbConnectionString = @"Data Source=(local);Initial Catalog=test;Integrated Security=True";
 
-        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=d:\vfptosql\vhost;Collating Sequence=general;DELETED=False;";
+        const String LaptopHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=d:\vfptosql\vhost";
 
 
-        const String EssexHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;Collating Sequence=general;DELETED=False;";
+        const String EssexHostConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\Essex\Hostdema;";
         const String EssexSqlConnectionString = @"Data Source=(local);Initial Catalog=Essex_22_000211;Integrated Security=True";
 
         public TestContext TestContext { get; set; }
 
         [TestMethod]
-        public void TestEssexInWMailUpload()
+        public void TestStringCompare()
         {
-            const String tableName = "IN_WMAIL";
+            const String restartTable = "SYCFGCHD";
+            const String thisTable = "SY_LOG";
+            //Less than zero strA is less than strB. Zero strA and strB are equal. Greater than zero strA is greater than strB.
+            int result = String.CompareOrdinal(restartTable, thisTable);
+            String txt = String.Empty;
+            if (result < 0)
+                txt = "after";
+            else if (result == 0)
+                txt = "equal";
+            else
+                txt = "before";
 
-            ITableProcessor tp = new TableUploader(new DiTableOrDefaultBatchSizeProvider(EssexHostConnectionString));
-            tp.Process(EssexHostConnectionString, tableName, EssexSqlConnectionString, tableName);
+            String msg = String.Format("{0} - {1}", result, txt);
+            TestContext.WriteLine(msg);
+
         }
 
 
@@ -53,7 +64,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestNumericScrubProcessorOnLargeTable()
         {
             const String tableName = "DP_CHRVL";
-            const String connStr = @"Provider=VFPOLEDB.1;Data Source=I:\Kohler\HOSTDEMO;Collating Sequence=general;DELETED=False;";
+            const String connStr = @"Provider=VFPOLEDB.1;Data Source=I:\Kohler\HOSTDEMO";
             NumericScrubProcessor tp = new NumericScrubProcessor();
             tp.Process(connStr, tableName, null,null);
             foreach (String cmdStr in tp.CommandStrings)

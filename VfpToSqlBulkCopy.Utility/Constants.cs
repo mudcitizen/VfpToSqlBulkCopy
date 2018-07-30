@@ -50,6 +50,11 @@ namespace VfpToSqlBulkCopy.Utility
             public static String POS => "POS";
         }
 
+        public static class ConnectionStringTerms
+        {
+            public static string VfpOleDbProvider => "VFPOLEDB.1";
+        }
+
         public static int DefaultBatchSize => 25000;
 
     }

@@ -10,7 +10,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
     [TestClass]
     public class TestTableProcessor
     {
-        const String bogusVfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general";
+        const String bogusVfpConnectionString = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;";
         String VfpConnectionString
         { get
             {
