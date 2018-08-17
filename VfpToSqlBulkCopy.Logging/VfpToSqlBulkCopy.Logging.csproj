@@ -58,13 +58,19 @@
     <Compile Include="Migrations\201805222218026_DropUPloadHeaderEnd.Designer.cs">
       <DependentUpon>201805222218026_DropUPloadHeaderEnd.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201808171816464_AddUploadDetailsClassName.cs" />
+    <Compile Include="Migrations\201808171816464_AddUploadDetailsClassName.Designer.cs">
+      <DependentUpon>201808171816464_AddUploadDetailsClassName.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\UploadDetail.cs" />
     <Compile Include="Models\UploadHeader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +85,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201805222218026_DropUPloadHeaderEnd.resx">
       <DependentUpon>201805222218026_DropUPloadHeaderEnd.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201808171816464_AddUploadDetailsClassName.resx">
+      <DependentUpon>201808171816464_AddUploadDetailsClassName.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -99,14 +99,14 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\VfpToSqlBulkCopy.Logging\VfpToSqlBulkCopy.Logging.csproj">
       <Project>{433693d1-b947-4a8b-9ce2-d2c34fe89cf0}</Project>
       <Name>VfpToSqlBulkCopy.Logging</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

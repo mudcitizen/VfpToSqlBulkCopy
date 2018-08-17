@@ -13,7 +13,15 @@ namespace VfpToSqlBulkCopy.Logging.Migrations
          *     <add name="EFUpload" connectionString="Data Source=(local);Initial Catalog=EfUpload;Integrated Security=True" providerName="System.Data.SqlClient" />
 
          * 
+         * Adding a migration - an example of a success story
          * 
+         * - Changed Model - Added UploadDetails.ClassName
+         * - Rebuild solution
+         * - Open PM Console
+         * - Make VfpToSqlBulkCopy.Logging the default project
+         * - add-migration AddUploadDetailsClassName -verbose -connectionStringName "EfUpload"
+         * 
+         * The AddUploadDetailsClassName (in 201808171816464_AddUploadDetailsClassName) as added
          * 
          */
 

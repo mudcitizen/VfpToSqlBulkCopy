@@ -12,9 +12,10 @@ namespace VfpToSqlBulkCopy.Utility.Events
 {
     public class SqlEventHandler : IUploadEventHandler
     {
+
         UploadHeader Header;
-        UploadDetail Detail; 
-        UploadContext Context; 
+        UploadDetail Detail;
+        UploadContext Context;
         public SqlEventHandler()
         {
             Context = new UploadContext();
@@ -23,14 +24,19 @@ namespace VfpToSqlBulkCopy.Utility.Events
 
         public void HandleTableProcessorBegin(object sender, TableProcessorBeginEventArgs args)
         {
-            Detail = new UploadDetail() { TableName = args.TableName, Begin = DateTime.Now, UploadHeader = Header };
+            Detail = new UploadDetail() { TableName = args.TableName, ClassName = args.ClassName, Begin = DateTime.Now, UploadHeader = Header };
             Context.UploadDetails.Add(Detail);
             Context.SaveChanges();
         }
 
         public void HandleTableProcessorEnd(object sender, TableProcessorEndEventArgs args)
         {
-            Detail.End = DateTime.Now;
+            UploadDetail detailToUpdate;
+            if (args.ClassName == Detail.ClassName)
+                detailToUpdate = Detail;
+            else
+                detailToUpdate = Context.UploadDetails.Where(detail => detail.UploadHeader.Id == Header.Id && detail.TableName == args.TableName && detail.ClassName == args.ClassName).First();
+            detailToUpdate.End = DateTime.Now;
             Context.SaveChanges();
         }
 
@@ -56,7 +62,7 @@ namespace VfpToSqlBulkCopy.Utility.Events
 
         public void HandleUploadEnd(object sender, EndUploadEventArgs args)
         {
-      
+
             Context.SaveChanges();
         }
     }

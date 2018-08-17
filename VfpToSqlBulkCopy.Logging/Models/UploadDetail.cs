@@ -10,6 +10,7 @@ namespace VfpToSqlBulkCopy.Logging.Models
     {
         public int Id { get; set; }
         public String TableName { get; set; }
+        public String ClassName { get; set; }
         public DateTime? Begin { get; set; }
         public DateTime? End { get; set; }
         public String Exception { get; set; }
