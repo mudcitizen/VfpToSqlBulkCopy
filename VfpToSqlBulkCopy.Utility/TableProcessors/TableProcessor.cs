@@ -50,50 +50,57 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
         public void Process(string sourceConnectionString, string sourceTableName, string destinationConnectionString, string destinationTableName)
         {
             destinationTableName = Helper.GetDestinationTableName(destinationTableName);
-            OnTableProcessorBegin(sourceTableName);
+            String thisClassName = GetType().Name;
+            OnTableProcessorBegin(new TableProcessorBeginEventArgs(sourceTableName, thisClassName));
             try
             {
                 foreach (ITableProcessor tp in _TableProcessors)
                 {
-                    tp.Process(sourceConnectionString, sourceTableName, destinationConnectionString, destinationTableName);
+                    try
+                    {
+                        OnTableProcessorBegin(new TableProcessorBeginEventArgs(sourceTableName, tp.GetType().Name));
+                        tp.Process(sourceConnectionString, sourceTableName, destinationConnectionString, destinationTableName);
+                        OnTableProcessorEnd(new TableProcessorEndEventArgs(sourceTableName, tp.GetType().Name));
+                    }
+                    catch (Exception ex)
+                    {
+                        OnTableProcessorError(new TableProcessorExceptionEventArgs(sourceTableName, tp.GetType().Name, ex));
+                    }
                 }
             }
             catch (Exception ex)
             {
-                OnTableProcessorError(sourceTableName, ex);
+                OnTableProcessorError(new TableProcessorExceptionEventArgs(sourceTableName, thisClassName, ex));
             }
-            OnTableProcessorEnd(sourceTableName);
+            OnTableProcessorEnd(new TableProcessorEndEventArgs(sourceTableName, thisClassName));
         }
 
 
 
 
         #region EventPublishers
-        protected virtual void OnTableProcessorBegin(String tableName)
+        protected virtual void OnTableProcessorBegin(TableProcessorBeginEventArgs args)
         {
             EventHandler<TableProcessorBeginEventArgs> handler = TableProcessorBegin;
             if (handler != null)
             {
-                TableProcessorBeginEventArgs args = new TableProcessorBeginEventArgs(tableName);
                 handler(this, args);
             }
         }
-        protected virtual void OnTableProcessorEnd(String tableName)
+        protected virtual void OnTableProcessorEnd(TableProcessorEndEventArgs args)
         {
             EventHandler<TableProcessorEndEventArgs> handler = TableProcessorEnd;
             if (handler != null)
             {
-                TableProcessorEndEventArgs args = new TableProcessorEndEventArgs(tableName);
                 handler(this, args);
             }
         }
 
-        protected virtual void OnTableProcessorError(String tableName, Exception exception)
+        protected virtual void OnTableProcessorError(TableProcessorExceptionEventArgs args)
         {
             EventHandler<TableProcessorExceptionEventArgs> handler = TableProcessorException;
             if (handler != null)
             {
-                TableProcessorExceptionEventArgs args = new TableProcessorExceptionEventArgs(tableName, exception);
                 handler(this, args);
             }
         }

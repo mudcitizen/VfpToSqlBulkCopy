@@ -52,6 +52,7 @@
     <Compile Include="DefaultBatchSizeProvider.cs" />
     <Compile Include="DiTableBatchSizeProvider.cs" />
     <Compile Include="DiTableOrDefaultBatchSizeProvider.cs" />
+    <Compile Include="Events\BaseTableProcessorEventArgs.cs" />
     <Compile Include="Events\SqlEventHandler.cs" />
     <Compile Include="IBatchSizeProvider.cs" />
     <Compile Include="TableProcessors\AsciiZeroMemoProcessor.cs" />

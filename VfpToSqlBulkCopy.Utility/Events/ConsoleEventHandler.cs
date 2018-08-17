@@ -22,14 +22,14 @@ namespace VfpToSqlBulkCopy.Utility.Events
         public void HandleTableProcessorBegin(object sender, TableProcessorBeginEventArgs args)
         {
             BeginEventArgs = args;
-            System.Console.Write(String.Format("{0} - {1}", PadTableName(args.TableName), args.When.ToLongTimeString()));
+            System.Console.WriteLine(GetBaseText(args));
         }
 
         public void HandleTableProcessorEnd(object sender, TableProcessorEndEventArgs args)
         {
             TimeSpan ts = args.When - BeginEventArgs.When;
             String duration = String.Format("{0:D2}:{1:D2}:{2:D2}:{3:D3}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
-            System.Console.WriteLine(" " + args.When.ToLongTimeString() + " " + duration);
+            System.Console.WriteLine(String.Format("{0} - Completed - {1}",GetBaseText(args), duration));
         }
 
         public void HandleTableProcessorException(object sender, TableProcessorExceptionEventArgs args)
@@ -38,6 +38,11 @@ namespace VfpToSqlBulkCopy.Utility.Events
             if (ExceptionsArgs == null)
                 ExceptionsArgs = new List<TableProcessorExceptionEventArgs>();
             ExceptionsArgs.Add(args);
+        }
+
+        String GetBaseText(BaseTableProcessorEventArgs args)
+        {
+            return String.Format("{0} - {1} - {2}", PadTableName(args.TableName), args.When.ToLongTimeString(), args.ClassName);
         }
 
         private String PadTableName(String tableName)
@@ -58,7 +63,7 @@ namespace VfpToSqlBulkCopy.Utility.Events
                 Console.ReadKey();
                 foreach (TableProcessorExceptionEventArgs arg in ExceptionsArgs)
                 {
-                    Console.WriteLine("Table - {0} ; Exception - {1}", arg.TableName, arg.Exception);
+                    Console.WriteLine("Table - {0} ; Class - {1} ; Exception - {2}", arg.TableName, arg.ClassName,arg.Exception);
                     Console.ReadKey();
                 }
 

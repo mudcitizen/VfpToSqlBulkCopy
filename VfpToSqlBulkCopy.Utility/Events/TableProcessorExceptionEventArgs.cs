@@ -6,15 +6,18 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility.Events
 {
-    public class TableProcessorExceptionEventArgs
+    public class TableProcessorExceptionEventArgs : BaseTableProcessorEventArgs
     {
-        public TableProcessorExceptionEventArgs(String tableName, Exception exception)
+        public Exception Exception { get; }
+        public TableProcessorExceptionEventArgs(String tableName, String className, Exception exception) : base(tableName,className)
         {
-            TableName = tableName;
             Exception = exception;
         }
-        public String TableName { get; }
-        public Exception Exception { get; }
+
+        public override string ToString()
+        {
+            return base.ToString() + " Exception - " + Exception.ToString();
+        }
 
     }
 }

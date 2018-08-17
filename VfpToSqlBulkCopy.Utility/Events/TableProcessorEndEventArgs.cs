@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace VfpToSqlBulkCopy.Utility.Events
 {
-    public class TableProcessorEndEventArgs : TableProcessorBeginEventArgs
+    public class TableProcessorEndEventArgs : BaseTableProcessorEventArgs
     {
-        public TableProcessorEndEventArgs(String tableName) : base(tableName) { }
+        public TableProcessorEndEventArgs(String tableName, String className) : base(tableName, className) { }
+        public TableProcessorEndEventArgs(BaseTableProcessorEventArgs args) : base(args.TableName, args.ClassName) { }
     }
 }
