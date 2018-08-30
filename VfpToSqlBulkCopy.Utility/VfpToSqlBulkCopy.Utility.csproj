@@ -79,6 +79,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Events\TableProcessorExceptionEventArgs.cs" />
     <Compile Include="CommandStringProviders\UpdateDateCommandStringProvider.cs" />
+    <Compile Include="TableProcessors\TruncateTableProcessor.cs" />
     <Compile Include="UploadLauncher.cs" />
     <Compile Include="VfpConnectionStringBuilder.cs" />
     <Compile Include="Events\CompositeEventHandler.cs" />

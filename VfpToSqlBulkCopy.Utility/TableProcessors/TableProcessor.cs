@@ -39,7 +39,7 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
         #region Initialize
         private void BuildAndInit(IBatchSizeProvider batchSizeProvider)
         {
-            Init(new List<ITableProcessor>() { new ZapProcessor(), new NumericScrubProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullCharacterScrubber(), new NullDateProcessor(), new SetDeletedProcessor() });
+            Init(new List<ITableProcessor>() { new TruncateTableProcessor(), new NumericScrubProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullCharacterScrubber(), new NullDateProcessor(), new SetDeletedProcessor() });
         }
         private void Init(IEnumerable<ITableProcessor> tableProcessors)
         {

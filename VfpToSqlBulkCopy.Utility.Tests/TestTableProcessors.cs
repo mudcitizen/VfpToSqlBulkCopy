@@ -48,6 +48,9 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         {
         }
 
+        void AddRows(int rowCount)
+        {
+        }
         [TestMethod]
         public void TestNullCharacterScrubber()
         {
@@ -67,11 +70,38 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestZapProcessor()
         {
             // Make sure there are rows
+            const String insertCmd = "INSERT INTO IN_RES (ResNo,Level) VALUES ('123456','INH)";
+            String connStr = GetConnectionString();
+            Helper.ExecuteSqlNonQuery(connStr, insertCmd);
             String cmdStr = "SELECT COUNT(*) FROM " + GetQualifiedTableName();
             Assert.IsTrue(GetRowCount(cmdStr) > 0);
             ITableProcessor zapper = new ZapProcessor();
             zapper.Process(null, null, GetConnectionString(), TableName);
             Assert.IsTrue(GetRowCount(cmdStr) == 0);
+        }
+
+        [TestMethod]
+        public void TestTruncateTableProcessor()
+        {
+            // Make sure there are rows
+            String rowCountCmdStr = "SELECT COUNT(*) FROM " + GetQualifiedTableName();
+            String nextIdentCmdStr = String.Format("SELECT ident_current('{0}') ", GetQualifiedTableName());
+
+            String connStr = GetConnectionString();
+
+
+            int rowCount = GetRowCount(rowCountCmdStr);
+            decimal seedValue = (decimal)Helper.GetSqlScaler(connStr, nextIdentCmdStr);
+
+            Assert.IsTrue(rowCount > 0);
+            Assert.IsTrue(seedValue > 0);
+            Assert.AreEqual(rowCount,seedValue);
+            ITableProcessor tableProcessor = new TruncateTableProcessor();
+            tableProcessor.Process(null, null, GetConnectionString(), TableName);
+            Assert.IsTrue(GetRowCount(rowCountCmdStr) == 0);
+
+            seedValue = (decimal)Helper.GetSqlScaler(connStr, nextIdentCmdStr);
+            Assert.AreEqual(1, seedValue);
         }
 
 
