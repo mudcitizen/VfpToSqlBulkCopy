@@ -135,69 +135,13 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
     IF loMemoFields.Count = 0
       RETURN ''
     ENDIF
-
-    LOCAL loExcp as Exception
-
-    TRY
-
-      LOCAL lcReturn
-      lcReturn  = ''
-      LOCAL loSqlClient 
-      loSqlClient = CREATEOBJECT('SqlClient') 
-      lcReturn = loSqlClient.Connect(tcSqlServerName,tcSqlDbName)
-
-      IF EMPTY(lcReturn) 
-
-        LOCAL lnSelect
-        lnSelect = SELECT()
-        LOCAL lcAlias,lcMemoField
-        lcAlias = STRTRAN(PROGRAM(),'.','_') + SYS(2015)
-        SELECT 0
-        USE (tcSourceTableName) Again ALIAS (lcAlias)
-        LOCAL lcCmd,lcBytes,lnRecNo
-
-        SCAN
-
-          FOR EACH lcMemofield IN loMemoFields
-
-            lcData = EVALUATE(lcMemoField)
-
-            IF AT(CHR(0),lcData) > 0
-              lcBytes = lcData
-              lnRecNo = RECNO()
-              lcCmd = 'UPDATE {1} SET {2} = ?lcBytes WHERE SqlRecNo = ?lnRecNo'
-              lcCmd = STRTRAN(lcCmd,'{1}',tcDestinationTableName )
-              lcCmd = STRTRAN(lcCmd,'{2}',lcMemoField)
-              lcReturn = loSqlClient.Exec(lnConnHandle)
-              IF NOT EMPTY(lcReturn) 
-                EXIT
-              ENDIF
-            ENDIF
-          NEXT
-
-          IF NOT EMPTY(lcReturn)
-            EXIT
-          ENDIF
-
-        ENDSCAN
-
-        USE IN (lcAlias)
-        SELECT (lnSelect)
-
-      ELSE
-
-        lcReturn = 'Unable to connect - ' + tcSqlServerName + ' ' + tcSqlDbName
-
-      ENDIF
-
-
-    CATCH TO loExcp
-      LOCAL loErrHandler
-      loErrHandler = CREATEOBJECT('ErrorHandler',loExcp)
-      lcReturn = loErrHandler.ErrorDetails
-    ENDTRY
-
-    RETURN lcReturn
+        
+    LOCAL loSqlWorker
+    loSqlWorker = CREATEOBJECT('UploadMemoWorker',tcSqlServerName,tcSqlDbName,tcSourceTableName,tcDestinationTableName,loMemoFields)
+    
+    LOCAL loInvoker
+    loInvoker = CREATEOBJECT('WorkerInvoker') 
+    RETURN loInvoker.Invoke(loSqlWorker) 
 
   ENDPROC
 
@@ -234,7 +178,7 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
     lcConversionActionProvider = tcDestinationTableName + '_ConversionActionProvider'
 
     TRY
-      loConversionActionProvider = CREATEOBJECT(lcConversionActionProvider)
+      loConversionActionProvider = NEWOBJECT(lcConversionActionProvider,'SQLUTIL.PRG')
     CATCH
       loConversionActionProvider = .Null.
     ENDTRY
@@ -243,15 +187,19 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
       RETURN ''
     ENDIF
 
+    LOCAL loSqlClient
     TRY
-      lnConnHandle = This.ConnectToSql(tcSqlServerName,tcSqlDbName)
-      IF lnConnHandle > 0
+      loSqlClient = CREATEOBJECT('SqlClient')
+      lcReturn = loSqlClient.Connect(tcSqlServerName,tcSqlDbName)
+      IF EMPTY(lcReturn)
         LOCAL loActions,loAction
         loActions = loConversionActionProvider.GetActions()
         FOR EACH loAction IN loActions
-          SQLEXEC(lnConnHandle,loAction.CommandString)
+          lcReturn = loSqlClient.Exec(loAction.CommandString)
+          IF NOT EMPTY(lcReturn)
+            EXIT
+          ENDIF
         NEXT
-        SQLDISCONNECT(lnConnHandle)
       ELSE
         lcReturn = 'Unable to connect - ' + lcConnStr
       ENDIF
@@ -264,6 +212,16 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
 
     RETURN lcReturn
 
+  ENDPROC
+
+  PROCEDURE SetPath(tcHostFolder as String) as VOID
+    LOCAL lcPath
+    lcPath = SET('PATH')
+    IF NOT EMPTY(lcPath)
+      lcPath = lcPath + ';'
+    ENDIF
+    lcPath = lcPath + ';' + ADDBS(tcHostFolder) + ';' + ADDBS(tcHostFolder) + 'FXP32\'
+    SET PATH TO &lcPath
   ENDPROC
 
 ENDDEFINE
@@ -321,6 +279,7 @@ DEFINE CLASS SqlClient as Custom
         lcReturn = 'Unable to connect ' + lcConnStr + CHR(13)+CHR(10) + .GetErrorDetails()
       ENDIF
     ENDWITH
+    RETURN lcReturn 
 
   ENDPROC
 
@@ -339,7 +298,7 @@ DEFINE CLASS SqlClient as Custom
     ELSE
       lcResult = ''
     ENDIF
-    IF llCloseIt
+    IF llCloseIt AND USED(tcCursorName)
       USE IN (tcCursorName)
     ENDIF
     SELECT(lnSele)
@@ -356,8 +315,12 @@ DEFINE CLASS SqlClient as Custom
       SQLDISCONNECT(This.Handle)
     ENDIF
   ENDPROC
+  
+  PROCEDURE GetConnectionString() as String
+    RETURN SQLGETPROP(This.Handle,'ConnectString') 
+  ENDPROC  
 
-  PROTECTED PROCEDURE GetErrorDetails() as String
+  PROCEDURE GetErrorDetails() as String
     LOCAL laError(1),lcError,lni,lcVartype
     = AERROR(laError)
     LIST MEMORY LIKE la TO a.txt
@@ -379,84 +342,209 @@ DEFINE CLASS SqlClient as Custom
 
   ENDPROC
 
-ENDDEFINE 
+ENDDEFINE
 
-  PROCEDURE TestUploadMemos
-    CLOSE DATABASES
-    LOCAL lcVfpDbf
-    lcVfpDbf = '..\..\VHOST\IN_WATRM.DBF'
-    ASSERT FILE(lcVfpDbf)
+PROCEDURE TestUploadMemos
+  CLOSE DATABASES
+  LOCAL lcVfpDbf
+  lcVfpDbf = '..\..\VHOST\IN_WATRM.DBF'
+  ASSERT FILE(lcVfpDbf)
 
-    LOCAL la(1)
-    SELECT COUNT(*) FROM (lcVfpDbf) WHERE AT(CHR(0),Background) > 0 INTO ARRAY la
-    ASSERT la(1) > 0 MESSAGE 'No rows with ASCII 0'
-    CLOSE DATA
-
-
-    LOCAL lcSqlServerName, lcSqlDbName
-    lcSqlServerName = GETENV('COMPUTERNAME')
-    lcSqlDbName = 'NoRows_22_000211'
-
-    LOCAL lcConnStr
-    lcConnStr = [DRIVER={SQL Server Native Client 11.0};UID=PSMSUsr;PWD=$1koj1@VGR2;Server={1};DataBase={2}]
-    lcConnStr = STRTRAN(lcConnStr,'{1}',lcSqlServerName)
-    lcConnStr = STRTRAN(lcConnStr,'{2}',lcSqlDbName)
-
-    LOCAL lcTable,lcField
-    lcTable = 'IN_WATRM'
+  LOCAL la(1)
+  SELECT COUNT(*) FROM (lcVfpDbf) WHERE AT(CHR(0),Background) > 0 INTO ARRAY la
+  ASSERT la(1) > 0 MESSAGE 'No rows with ASCII 0'
+  CLOSE DATA
 
 
-    * Clear the contents in the SQL DB
-    LOCAL lnH
-    lnH = SQLSTRINGCONNECT(lcConnStr)
-    LOCAL lcCmd
-    lcCmd = [UPDATE IN_WATRM SET Background = '']
-    ASSERT lnH > 0
-    SQLEXEC(lnH,lcCmd)
+  LOCAL lcSqlServerName, lcSqlDbName
+  lcSqlServerName = GETENV('COMPUTERNAME')
+  lcSqlDbName = 'NoRows_22_000211'
 
-    WITH CREATEOBJECT('VfpToSqlBulkCopy')
-      LOCAL lcResult
-      lcResult = .UploadMemos(lcVfpDbf,lcTable,lcSqlServerName,lcSqlDbName)
-    ENDWITH
+  LOCAL lcConnStr
+  lcConnStr = [DRIVER={SQL Server Native Client 11.0};UID=PSMSUsr;PWD=$1koj1@VGR2;Server={1};DataBase={2}]
+  lcConnStr = STRTRAN(lcConnStr,'{1}',lcSqlServerName)
+  lcConnStr = STRTRAN(lcConnStr,'{2}',lcSqlDbName)
 
-    ASSERT EMPTY(lcResult)
+  LOCAL lcTable,lcField
+  lcTable = 'IN_WATRM'
 
-    SELECT RECNO() as RecNo,BackGround FROM (lcVfpDbf) INTO CURSOR VFP NOFILTER
-    SQLEXEC(lnh,'SELECT SqlRecno as RecNo, Background FROM IN_WATRM','SQL')
 
-    ASSERT RECCOUNT('VFP') = RECCOUNT('SQL')
-    SELECT VFP
-    SCAN
-      SELECT SQL
-      LOCATE FOR Recno = Vfp.Recno
-      ASSERT FOUND() MESSAGE 'No matching record in SQL for VFP'
-      ASSERT VFP.Background == Sql.Background MESSAGE 'Backgrounds differ'
-    ENDSCAN
+  * Clear the contents in the SQL DB
+  LOCAL lnH
+  lnH = SQLSTRINGCONNECT(lcConnStr)
+  LOCAL lcCmd
+  lcCmd = [UPDATE IN_WATRM SET Background = '']
+  ASSERT lnH > 0
+  SQLEXEC(lnH,lcCmd)
 
-    CLOSE DATABASES
-    SQLDISCONNECT(lnh)
+  WITH CREATEOBJECT('VfpToSqlBulkCopy')
+    LOCAL lcResult
+    lcResult = .UploadMemos(lcVfpDbf,lcTable,lcSqlServerName,lcSqlDbName)
+  ENDWITH
+
+  ASSERT EMPTY(lcResult)
+
+  SELECT RECNO() as RecNo,BackGround FROM (lcVfpDbf) INTO CURSOR VFP NOFILTER
+  SQLEXEC(lnh,'SELECT SqlRecno as RecNo, Background FROM IN_WATRM','SQL')
+
+  ASSERT RECCOUNT('VFP') = RECCOUNT('SQL')
+  SELECT VFP
+  SCAN
+    SELECT SQL
+    LOCATE FOR Recno = Vfp.Recno
+    ASSERT FOUND() MESSAGE 'No matching record in SQL for VFP'
+    ASSERT VFP.Background == Sql.Background MESSAGE 'Backgrounds differ'
+  ENDSCAN
+
+  CLOSE DATABASES
+  SQLDISCONNECT(lnh)
+
+ENDPROC
+
+PROCEDURE TestListMemos
+  LOCAL lcTableIn,lcFolderOut,lcTableOut
+  lcTableIn = 'D:\VHOST\IN_WATRM.DBF'
+  lcFolderOut = 'C:\TEMP\MEMOOUT\'
+  lcTableOut = 'MemoProblems'
+
+
+
+
+  * USE C:\TEMP\MEMOOUT\MemoProblems'
+  LOCAL lcClass,lcReturn
+  lcClass = 'VfpToSqlBulkCopy.VfpToSqlBulkCopy'
+  lcClass = 'VfpToSqlBulkCopy'
+  WITH CREATEOBJECT(lcClass)
+    lcReturn = .ListMemos(lcTableIn,lcFolderOut,lcTableOut)
+    IF EMPTY(lcReturn)
+      SELECT * FROM (ADDBS(lcFolderOut)+lcTableOut)
+    ENDIF
+  ENDWITH
+
+ENDPROC
+
+
+DEFINE CLASS Worker as Custom
+  PROCEDURE Work() as String
+    RETURN ''
+  ENDPROC
+ENDDEFINE
+
+DEFINE CLASS SqlWorker as Worker
+
+  PROTECTED SqlServerName,SqlDbName
+
+  PROCEDURE Init(tcSqlSeverName as String,tcSqlDbName as String)
+    This.SqlServerName = tcSqlSeverName
+    This.SqlDbName = tcSqlDbName
+  ENDPROC
+
+  PROCEDURE Work() as String
+    LOCAL loSqlClient,lcResult
+    loSqlClient = CREATEOBJECT('SqlClient')
+    lcResult = loSqlClient.Connect(This.SqlServerName,This.SqlDbName)
+    IF EMPTY(lcResult)
+      This.DoWork(loSqlClient)
+    ENDIF
+    RETURN lcResult
+  ENDPROC
+
+  PROTECTED PROCEDURE DoWork(toSqlClient as Object)
+    ERROR 'Subclass must implement DoWork()'
+  ENDPROC
+
+ENDDEFINE
+
+DEFINE CLASS WorkerInvoker as Custom
+
+  * We have a couple of things that need to work within
+  * a TRY/CATCH block in which the CATCH needs to build
+  * and return a core dump if things go bad.
+
+  * This class provides a mechanism to invoke a worker.
+  * The worker doesn't needs to sweat the details of
+  * the CATCH - becuase this class handles those details
+
+  PROCEDURE Invoke(toWorker as Object) as String
+
+    LOCAL loExcp as Exception
+    LOCAL lcReturn
+
+    TRY
+      lcReturn = ''
+      lcReturn = toWorker.Work()
+    CATCH TO loExcp
+      LOCAL loErrHandler
+      loErrHandler = CREATEOBJECT('ErrorHandler',loExcp)
+      lcReturn = loErrHandler.ErrorDetails
+    ENDTRY
+
+    RETURN lcReturn
 
   ENDPROC
 
-  PROCEDURE TestListMemos
-    LOCAL lcTableIn,lcFolderOut,lcTableOut
-    lcTableIn = 'D:\VHOST\IN_WATRM.DBF'
-    lcFolderOut = 'C:\TEMP\MEMOOUT\'
-    lcTableOut = 'MemoProblems'
+ENDDEFINE
+
+DEFINE CLASS UploadMemoWorker as SqlWorker
+
+  PROTECTED MemoFields,DestinationTableName,SourceTableName
 
 
+  PROCEDURE Init(tcSqlSeverName as String,tcSqlDbName as String,tcSourceTableName,tcDestinationTableName as String,toMemoFields as Collection)
+    DODEFAULT(tcSqlSeverName,tcSqlDbName)
+    This.MemoFields = toMemoFields
+    This.SourceTableName = tcSourceTableName
+    This.DestinationTableName = tcDestinationTableName
+  ENDPROC
 
+  PROTECTED PROCEDURE DoWork(toSqlClient as Object)
 
-    * USE C:\TEMP\MEMOOUT\MemoProblems'
-    LOCAL lcClass,lcReturn
-    lcClass = 'VfpToSqlBulkCopy.VfpToSqlBulkCopy'
-    lcClass = 'VfpToSqlBulkCopy'
-    WITH CREATEOBJECT(lcClass)
-      lcReturn = .ListMemos(lcTableIn,lcFolderOut,lcTableOut)
-      IF EMPTY(lcReturn)
-        SELECT * FROM (ADDBS(lcFolderOut)+lcTableOut)
-      ENDIF
+    WITH This
+
+      = halthere(PROGRAM())
+      LOCAL lnSelect
+      lnSelect = SELECT()
+      LOCAL lcAlias,lcMemoField
+      lcAlias = STRTRAN(PROGRAM(),'.','_') + SYS(2015)
+      SELECT 0
+      USE (.SourceTableName) Again ALIAS (lcAlias)
+      LOCAL lcCmd,lnRecNo,lcBytes
+      
+      * Best laid plans.... because the UPDATE statement uses SQL Parms
+      * it needs its own connection.....
+      LOCAL lnHandle
+      lnHandle = SQLSTRINGCONNECT(toSqlClient.GetConnectionString()) 
+      
+      SCAN
+
+        FOR EACH lcMemofield IN .MemoFields
+
+          lcData = EVALUATE(lcMemoField)
+
+          IF AT(CHR(0),lcData) > 0
+            lcBytes = lcData
+            lnRecNo = RECNO()
+            lcCmd = 'UPDATE {1} SET {2} = ?lcBytes WHERE SqlRecNo = ?lnRecNo'
+            lcCmd = STRTRAN(lcCmd,'{1}',.DestinationTableName )
+            lcCmd = STRTRAN(lcCmd,'{2}',lcMemoField)
+            IF SqlExec(lnHandle,lcCmd) < 0
+              ERROR toSqlClient.GetErrorDetails()
+            ENDIF 
+          ENDIF
+
+        NEXT
+
+        IF NOT EMPTY(lcReturn)
+          EXIT
+        ENDIF
+
+      ENDSCAN
+
+      USE IN (lcAlias)
+      SELECT (lnSelect)
+
     ENDWITH
 
   ENDPROC
 
+ENDDEFINE
