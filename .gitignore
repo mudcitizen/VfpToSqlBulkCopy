@@ -8,7 +8,14 @@ VFP/a.*
 VFP/R.PRG
 VFP/HALTHERE.PRG
 VFP/*.VBR
-vfp/*.txt
+VFP/*.txt
+VFP/CN_*.DBF
+VFP/CN_*.CDX
+VFP/tests/fxu*.*
+VFP/tests/*.bak
+VFP/tests/*.fxp
+
+
 
 
 
