@@ -62,6 +62,9 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
                         recsUploaded = recsUploaded + dataTable.Rows.Count;
 
                         // Push rows to SQL 
+                        // D # 19055 As instantiated, our SqlBulkCopy won't fire triggers.  And doing what we need to do 
+                        // isn't as simple as firing triggers - because as part of the overall upload we TRUNCATE TABLE <> - 
+                        // which does not fire the DELETE trigger...
                         using (SqlBulkCopy copier = new SqlBulkCopy(destinationConnection))
                         {
                             DataTableReader dtReader = dataTable.CreateDataReader();
