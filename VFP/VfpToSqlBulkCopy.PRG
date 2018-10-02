@@ -135,13 +135,13 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
     IF loMemoFields.Count = 0
       RETURN ''
     ENDIF
-        
+
     LOCAL loSqlWorker
     loSqlWorker = CREATEOBJECT('UploadMemoWorker',tcSqlServerName,tcSqlDbName,tcSourceTableName,tcDestinationTableName,loMemoFields)
-    
+
     LOCAL loInvoker
-    loInvoker = CREATEOBJECT('WorkerInvoker') 
-    RETURN loInvoker.Invoke(loSqlWorker) 
+    loInvoker = CREATEOBJECT('WorkerInvoker')
+    RETURN loInvoker.Invoke(loSqlWorker)
 
   ENDPROC
 
@@ -167,50 +167,13 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
 
   ENDPROC
 
-  PROCEDURE ProcessConversionActions(tcDestinationTableName as String, tcSqlServerName as String,tcSqlDbName as String) as String
+  PROCEDURE ProcessConversionActions(tcDestinationTableName as String, tcSqlServerName as String, tcSqlDbName as String) as String
 
-    LOCAL loExcp as Exception
-
-    LOCAL lcReturn
-    lcReturn  = ''
-
-    LOCAL loConversionActionProvider,lcConversionActionProvider
-    lcConversionActionProvider = tcDestinationTableName + '_ConversionActionProvider'
-
-    TRY
-      loConversionActionProvider = NEWOBJECT(lcConversionActionProvider,'SQLUTIL.PRG')
-    CATCH
-      loConversionActionProvider = .Null.
-    ENDTRY
-
-    IF ISNULL(loConversionActionProvider)
-      RETURN ''
-    ENDIF
-
-    LOCAL loSqlClient
-    TRY
-      loSqlClient = CREATEOBJECT('SqlClient')
-      lcReturn = loSqlClient.Connect(tcSqlServerName,tcSqlDbName)
-      IF EMPTY(lcReturn)
-        LOCAL loActions,loAction
-        loActions = loConversionActionProvider.GetActions()
-        FOR EACH loAction IN loActions
-          lcReturn = loSqlClient.Exec(loAction.CommandString)
-          IF NOT EMPTY(lcReturn)
-            EXIT
-          ENDIF
-        NEXT
-      ELSE
-        lcReturn = 'Unable to connect - ' + lcConnStr
-      ENDIF
-
-    CATCH TO loExcp
-      LOCAL loErrHandler
-      loErrHandler = CREATEOBJECT('ErrorHandler',loExcp)
-      lcReturn = loErrHandler.ErrorDetails
-    ENDTRY
-
-    RETURN lcReturn
+    LOCAL loSqlWorker
+    loSqlWorker = CREATEOBJECT('ConversionActionWorker',tcSqlServerName, tcSqlDbName ,tcDestinationTableName)
+    LOCAL loInvoker
+    loInvoker = CREATEOBJECT('WorkerInvoker')
+    RETURN loInvoker.Invoke(loSqlWorker)
 
   ENDPROC
 
@@ -279,11 +242,11 @@ DEFINE CLASS SqlClient as Custom
         lcReturn = 'Unable to connect ' + lcConnStr + CHR(13)+CHR(10) + .GetErrorDetails()
       ENDIF
     ENDWITH
-    RETURN lcReturn 
+    RETURN lcReturn
 
   ENDPROC
 
-  PROCEDURE Exec(tcCommandString as String,tcCursorName AS StrinG) as String
+  PROCEDURE Exec(tcCommandString as String,tcCursorName AS String) as String
     LOCAL lcResult,lnResult
     LOCAL lnSele
     lnSele = SELECT()
@@ -291,6 +254,9 @@ DEFINE CLASS SqlClient as Custom
     llCloseIt = EMPTY(tcCursorName)
     IF llCloseIt
       tcCursorName = SYS(2015)
+    ENDIF
+    IF Application.StartMode = 0
+      = STRTOFILE(tcCommandString + CHR(13)+CHR(10),'SqlClient.Log',.T.)
     ENDIF
     lnResult = SQLEXEC(This.Handle,tcCommandString,tcCursorName)
     IF lnResult < 0
@@ -315,10 +281,10 @@ DEFINE CLASS SqlClient as Custom
       SQLDISCONNECT(This.Handle)
     ENDIF
   ENDPROC
-  
+
   PROCEDURE GetConnectionString() as String
-    RETURN SQLGETPROP(This.Handle,'ConnectString') 
-  ENDPROC  
+    RETURN SQLGETPROP(This.Handle,'ConnectString')
+  ENDPROC
 
   PROCEDURE GetErrorDetails() as String
     LOCAL laError(1),lcError,lni,lcVartype
@@ -501,7 +467,6 @@ DEFINE CLASS UploadMemoWorker as SqlWorker
 
     WITH This
 
-      = halthere(PROGRAM())
       LOCAL lnSelect
       lnSelect = SELECT()
       LOCAL lcAlias,lcMemoField
@@ -509,12 +474,12 @@ DEFINE CLASS UploadMemoWorker as SqlWorker
       SELECT 0
       USE (.SourceTableName) Again ALIAS (lcAlias)
       LOCAL lcCmd,lnRecNo,lcBytes
-      
+
       * Best laid plans.... because the UPDATE statement uses SQL Parms
       * it needs its own connection.....
       LOCAL lnHandle
-      lnHandle = SQLSTRINGCONNECT(toSqlClient.GetConnectionString()) 
-      
+      lnHandle = SQLSTRINGCONNECT(toSqlClient.GetConnectionString())
+
       SCAN
 
         FOR EACH lcMemofield IN .MemoFields
@@ -529,7 +494,7 @@ DEFINE CLASS UploadMemoWorker as SqlWorker
             lcCmd = STRTRAN(lcCmd,'{2}',lcMemoField)
             IF SqlExec(lnHandle,lcCmd) < 0
               ERROR toSqlClient.GetErrorDetails()
-            ENDIF 
+            ENDIF
           ENDIF
 
         NEXT
@@ -544,6 +509,54 @@ DEFINE CLASS UploadMemoWorker as SqlWorker
       SELECT (lnSelect)
 
     ENDWITH
+
+  ENDPROC
+
+ENDDEFINE
+
+DEFINE CLASS ConversionActionWorker as SqlWorker
+
+  PROTECTED DestinationTableName
+
+  PROCEDURE Init(tcSqlSeverName as String,tcSqlDbName as String,tcDestinationTableName as String)
+    DODEFAULT(tcSqlSeverName,tcSqlDbName)
+    This.DestinationTableName = tcDestinationTableName
+  ENDPROC
+
+  PROTECTED PROCEDURE DoWork(toSqlClient as Object)
+
+    WITH This
+
+      LOCAL loExcp as Exception,lcReturn
+      lcReturn  = ''
+
+      LOCAL loConversionActionProvider,lcClass
+      lcClass = This.DestinationTableName + '_ConversionActionProvider'
+      TRY
+        loExcp = .Null.
+        loConversionActionProvider = NEWOBJECT(lcClass,'SQLUTIL.PRG')
+      CATCH TO loExcp
+        loConversionActionProvider = .Null.
+      ENDTRY
+
+      IF NOT ISNULL(loExcp)
+        IF loExcp.ErrorNo <> 1733
+          loConversionActionProvider = NEWOBJECT(lcClass,'SQLUTIL.PRG')
+        ENDIF
+      ELSE
+        LOCAL loActions,loAction
+        loActions = loConversionActionProvider.GetActions()
+        FOR EACH loAction IN loActions
+          lcReturn = toSqlClient.Exec(loAction.CommandString)
+          IF NOT EMPTY(lcReturn)
+            EXIT
+          ENDIF
+        NEXT
+      ENDIF
+
+    ENDWITH
+
+    RETURN lcReturn
 
   ENDPROC
 

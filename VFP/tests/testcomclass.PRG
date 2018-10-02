@@ -57,6 +57,39 @@ DEFINE CLASS testComClass as baseTest OF baseTest.prg
 
     ENDWITH
 
+  PROCEDURE TestConversionAction
+    WITH This
+
+      LOCAL lcDb,lcServer,lcTable
+      lcTAble = 'IN_SPBL'
+      lcServer = GETENV('COMPUTERNAME')
+      lcDb = 'Essex_22_000211'
+
+      
+      LOCAL loClient,lcResult
+      loClient = NEWOBJECT('SqlClient','vfptosqlbulkcopy.prg')
+      loClient.Connect(lcServer,lcDb)
+      * lcResult = loClient.Exec([DELETE FROM ] + lcTable)
+      * There needs to be a row in the SQL table to update...
+      * lcResult = loClient.Exec([INSERT INTO ] + lcTable + [(PK) VALUES ('123456')])
+
+*!*	      LOCAL lcCmd
+*!*	      lcCmd = 'select * from ' + lcTable 
+*!*	      lcResult = loClient.Exec(lcCmd,'FUNG')
+
+*!*	      .AssertTrue('Expected 1 or more rows',RECCOUNT('fung')=1)
+= HALTHERE(PROGRAM()) 
+      .vfptosqlbulkcopy.SetPath('\essex\Hostdema')
+      lcResult = .vfptosqlbulkcopy.ProcessConversionActions(lcTable, lcServer,lcDb)
+
+*!*	      lcCmd = 'select * from ' + lcTable + ' where charindex(char(0),background) > 0'
+*!*	      lcResult = loClient.Exec(lcCmd,'FUNG')
+
+*!*	      .AssertTrue('Expected 1 or more rows',RECCOUNT('fung')=1)
+*!*	      USE IN FUNG
+
+    ENDWITH
+
   ENDPROC
 
 ENDDEFINE
