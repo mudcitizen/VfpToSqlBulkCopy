@@ -178,13 +178,24 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
   ENDPROC
 
   PROCEDURE SetPath(tcHostFolder as String) as VOID
-    LOCAL lcPath
-    lcPath = SET('PATH')
+    LOCAL lcPath,lcCurrPath
+    lcPath = UPPER(SET('PATH'))
+    lcCurrPath = lcPath
     IF NOT EMPTY(lcPath)
       lcPath = lcPath + ';'
     ENDIF
-    lcPath = lcPath + ';' + ADDBS(tcHostFolder) + ';' + ADDBS(tcHostFolder) + 'FXP32\'
-    SET PATH TO &lcPath
+    tcHostFolder = UPPER(ALLTRIM(ADDBS(tcHostFolder)))
+    IF AT(tcHostFolder,lcPath) = 0
+      lcPath = lcPath + ';' + ADDBS(tcHostFolder)
+    ENDIF
+    LOCAL lcFxp32
+    lcFxp32 = ADDBS(tcHostFolder) + 'FXP32\'
+    IF AT(lcFxp32,lcPath) = 0
+      lcPath = lcPath + ';' + ADDBS(lcFxp32)
+    ENDIF
+    IF NOT lcPath == lcCurrPath
+      SET PATH TO &lcPath
+    ENDIF
   ENDPROC
 
 ENDDEFINE
@@ -498,10 +509,6 @@ DEFINE CLASS UploadMemoWorker as SqlWorker
           ENDIF
 
         NEXT
-
-        IF NOT EMPTY(lcReturn)
-          EXIT
-        ENDIF
 
       ENDSCAN
 
