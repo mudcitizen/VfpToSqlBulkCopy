@@ -180,10 +180,10 @@ DEFINE CLASS VfpToSqlBulkCopy as Session OLEPUBLIC
   PROCEDURE SetPath(tcHostFolder as String) as VOID
     LOCAL lcPath,lcCurrPath
     lcPath = UPPER(SET('PATH'))
-    lcCurrPath = lcPath
     IF NOT EMPTY(lcPath)
       lcPath = lcPath + ';'
     ENDIF
+    lcCurrPath = lcPath
     tcHostFolder = UPPER(ALLTRIM(ADDBS(tcHostFolder)))
     IF AT(tcHostFolder,lcPath) = 0
       lcPath = lcPath + ';' + ADDBS(tcHostFolder)

@@ -39,7 +39,27 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
         #region Initialize
         private void BuildAndInit(IBatchSizeProvider batchSizeProvider)
         {
-            Init(new List<ITableProcessor>() { new TruncateTableProcessor(), new NumericScrubProcessor(), new TableUploader(batchSizeProvider), new AsciiZeroMemoProcessor(), new NullCharacterScrubber(), new NullDateProcessor(), new SetDeletedProcessor() });
+
+            /*
+            Positioning the ConversionActionProcessor is tricky.  At 1st I put it at the 
+            end because I didn't want it firing when we handle null dates etc.  But
+            I blew chow in my test because as part of the test setup I had deleted 
+            the _currentVersions tables.  When NullDateProcessor issued the the 
+            update on IN_SBPL the trigger that updates _currentVersions fired and
+            bombed because the table didn't exist
+            */
+
+            Init(new List<ITableProcessor>()
+            { new TruncateTableProcessor(),
+              new NumericScrubProcessor(),
+              new TableUploader(batchSizeProvider),
+              new ConversionActionProcessor(),
+              new AsciiZeroMemoProcessor(),
+              new NullCharacterScrubber(),
+              new NullDateProcessor(),
+              new SetDeletedProcessor()
+            }
+            );
         }
         private void Init(IEnumerable<ITableProcessor> tableProcessors)
         {

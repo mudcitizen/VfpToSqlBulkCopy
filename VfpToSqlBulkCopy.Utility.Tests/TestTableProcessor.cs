@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VfpToSqlBulkCopy.Utility.CommandStringProviders;
 using VfpToSqlBulkCopy.Utility.TableProcessors;
@@ -74,7 +75,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         }
 
         [TestMethod]
-         public void TestUploadithAsciiZero()
+         public void TestUploadWithAsciiZero()
         {
             const String tableName = "IN_WATRM";
             Helper.ExecuteSqlNonQuery(SqlConnectionString,"DELETE FROM " + tableName);
@@ -87,6 +88,49 @@ namespace VfpToSqlBulkCopy.Utility.Tests
                 Assert.IsTrue(Convert.ToInt32(row[0]) > 0);
 
         }
+
+        [TestMethod]
+        public void TestUploadOfTableWithConversionActions()
+        {
+            const String tableName = "IN_SPBL";
+
+            String triggerName = tableName + "_PackageDetail_CurrentVersions_Rebuild";
+            string currentVersionsTable = tableName + "_PackageDetail_CurrentVersions";
+            String pkgDetailProc = tableName + "_GetPackageDetail";
+
+            List<String> dropCmds = new List<String>();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("IF EXISTS(SELECT* FROM sys.triggers WHERE object_id = OBJECT_ID(N'[dbo].[{0}]'))");
+            sb.AppendLine("DROP TRIGGER {0}");
+            dropCmds.Add(String.Format(sb.ToString(), triggerName));
+
+            sb.Clear();
+            sb.AppendLine("IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}')");
+            sb.AppendLine("DROP TABLE {0}");
+            dropCmds.Add(String.Format(sb.ToString(), currentVersionsTable));
+
+            sb.Clear();
+            sb.AppendLine("IF EXISTS(SELECT name FROM  sysobjects WHERE Name = '{0}' AND[Type] = 'P')");
+            sb.AppendLine("DROP PROCEDURE {0}");
+            dropCmds.Add(String.Format(sb.ToString(), pkgDetailProc));
+
+
+            foreach (String dropCmd in dropCmds)
+            {
+                Helper.ExecuteSqlNonQuery(SqlConnectionString, dropCmd);
+            }
+
+            ITableProcessor tblProc = new TableProcessor(new DiTableOrDefaultBatchSizeProvider(VfpConnectionString));
+            tblProc.Process(VfpConnectionString, tableName, SqlConnectionString, tableName);
+
+            // Make sure table exists
+            int rowCount = (int)Helper.GetSqlScaler(SqlConnectionString, "SELECT COUNT(*) FROM " + currentVersionsTable);
+            Assert.IsTrue(rowCount > 0);
+
+
+
+        }
+
 
 
 

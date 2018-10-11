@@ -1,2 +1,2 @@
-7z a D:\zipz\20180817VfpToSqlBulkCopy1 *.sln *.suo *.cs*  *.sql *.xsd *.config *.testsettings *.resx *.settings *.vdproj .git -r
+7z a D:\zipz\20181009VfpToSqlBulkCopy1 *.sln *.suo *.cs*  *.sql *.xsd *.config *.testsettings *.resx *.settings *.vdproj *.PRG .git -r
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,7 +33,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
                 String dateVal = ((i % 2) == 0) ? Constants.SqlDateMinValue : "20180101";
                 String chrVal = ((i % 2) == 0) ? CharFieldConstant : CharFieldConstant.Replace(' ', '\0');
                 //String chrVal = CharFieldConstant ;
-                sb.AppendLine(String.Format("INSERT INTO {0}.DBO.{1} (RecNo,DateFld,SqlDeleted,charfld) VALUES ({2},'{3}',0,'{4}')", DbName, TableName, Convert.ToString(i), dateVal,chrVal));
+                sb.AppendLine(String.Format("INSERT INTO {0}.DBO.{1} (RecNo,DateFld,SqlDeleted,charfld) VALUES ({2},'{3}',0,'{4}')", DbName, TableName, Convert.ToString(i), dateVal, chrVal));
             }
 
             String cmds = String.Format(sb.ToString(), DbName, TableName);
@@ -95,7 +96,7 @@ namespace VfpToSqlBulkCopy.Utility.Tests
 
             Assert.IsTrue(rowCount > 0);
             Assert.IsTrue(seedValue > 0);
-            Assert.AreEqual(rowCount,seedValue);
+            Assert.AreEqual(rowCount, seedValue);
             ITableProcessor tableProcessor = new TruncateTableProcessor();
             tableProcessor.Process(null, null, GetConnectionString(), TableName);
             Assert.IsTrue(GetRowCount(rowCountCmdStr) == 0);
@@ -109,13 +110,65 @@ namespace VfpToSqlBulkCopy.Utility.Tests
         public void TestNullDateProcessor()
         {
             // Make sure there are rows
-            String cmdStr = "SELECT COUNT(*) FROM " + GetQualifiedTableName() + " WHERE DateFld is Null" ;
+            String cmdStr = "SELECT COUNT(*) FROM " + GetQualifiedTableName() + " WHERE DateFld is Null";
             Assert.IsTrue(GetRowCount(cmdStr) == 0);
-            ITableProcessor tableProcessor  = new NullDateProcessor();
+            ITableProcessor tableProcessor = new NullDateProcessor();
             tableProcessor.Process(null, null, GetConnectionString(), TableName);
             Assert.IsTrue(GetRowCount(cmdStr) > 0);
         }
 
+        [TestMethod]
+        public void TestConversionActionProvider()
+        {
+            const String vfpConnStr = @"Provider=VFPOLEDB.1;Data Source=D:\VfpToSql\vhost;Collating Sequence=general;DELETED=False;";
+            const String sqlConnStr = @"Data Source=(local);Initial Catalog=NoRows_22_000211;Integrated Security=True";
+
+            const String tableName = "IN_SPBL";
+            String triggerName = tableName + "_PackageDetail_CurrentVersions_Rebuild";
+            string currentVersionsTable = tableName + "_PackageDetail_CurrentVersions";
+            String pkgDetailProc = tableName + "_GetPackageDetail";
+
+            List<String> dropCmds = new List<String>();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("IF EXISTS(SELECT* FROM sys.triggers WHERE object_id = OBJECT_ID(N'[dbo].[{0}]'))");
+            sb.AppendLine("DROP TRIGGER {0}");
+            dropCmds.Add(String.Format(sb.ToString(), triggerName));
+
+            sb.Clear();
+            sb.AppendLine("IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{0}')");
+            sb.AppendLine("DROP TABLE {0}");
+            dropCmds.Add(String.Format(sb.ToString(), currentVersionsTable));
+
+            sb.Clear();
+            sb.AppendLine("IF EXISTS(SELECT name FROM  sysobjects WHERE Name = '{0}' AND[Type] = 'P')");
+            sb.AppendLine("DROP PROCEDURE {0}");
+            dropCmds.Add(String.Format(sb.ToString(), pkgDetailProc));
+
+
+            foreach (String dropCmd in dropCmds)
+            {
+                Helper.ExecuteSqlNonQuery(sqlConnStr, dropCmd);
+            }
+
+            ITableProcessor tp = new ConversionActionProcessor();
+            tp.Process(vfpConnStr, tableName, sqlConnStr, tableName);
+
+            // Make sure table exists
+            int rowCount = (int)Helper.GetSqlScaler(sqlConnStr, "SELECT COUNT(*) FROM " + currentVersionsTable);
+            Assert.IsTrue(rowCount > 0);
+
+            // Make sure trigger exists
+            String cmd = String.Format("SELECT COUNT(*) FROM sys.triggers WHERE object_id = OBJECT_ID(N'[dbo].[{0}]')", triggerName);
+            rowCount = (int)Helper.GetSqlScaler(sqlConnStr, cmd);
+            Assert.IsTrue(rowCount == 1);
+
+            // Make sure proc exists
+            cmd = String.Format("SELECT COUNT(*) FROM  sysobjects WHERE Name = '{0}' AND [Type] = 'P'", pkgDetailProc);
+            rowCount = (int)Helper.GetSqlScaler(sqlConnStr, cmd);
+            Assert.IsTrue(rowCount == 1);
+
+
+        }
 
         String GetQualifiedTableName()
         {

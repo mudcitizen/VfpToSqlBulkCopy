@@ -21,6 +21,9 @@ namespace VfpToSqlBulkCopy.Utility.TableProcessors
 
             Ivfptosqlbulkcopy com = new vfptosqlbulkcopyClass();
             String result = com.UploadMemos(vfpFileName, destinationTableName, sqlConStrBldr.DataSource, sqlConStrBldr.InitialCatalog);
+
+            if (!String.IsNullOrEmpty(result))
+                throw new Exception(result);
         }
     }
 }

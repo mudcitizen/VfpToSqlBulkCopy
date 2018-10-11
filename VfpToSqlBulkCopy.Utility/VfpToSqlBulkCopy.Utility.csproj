@@ -59,6 +59,7 @@
     <Compile Include="Events\BeginUploadEventArgs.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Events\EndUploadEventArgs.cs" />
+    <Compile Include="TableProcessors\ConversionActionProcessor.cs" />
     <Compile Include="TableProcessors\NullCharacterScrubber.cs" />
     <Compile Include="TableProcessors\NumericScrubProcessor.cs" />
     <Compile Include="TableProcessors\SetDeletedProcessor.cs" />
@@ -89,6 +90,16 @@
     <Compile Include="TableProcessors\ZapProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VfpToSqlBulkCopy.Logging\VfpToSqlBulkCopy.Logging.csproj">
+      <Project>{433693d1-b947-4a8b-9ce2-d2c34fe89cf0}</Project>
+      <Name>VfpToSqlBulkCopy.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <COMReference Include="vfptosqlbulkcopy">
       <Guid>{C36F57D9-E232-4C14-A8C9-E94A009765B4}</Guid>
       <VersionMajor>1</VersionMajor>
@@ -98,16 +109,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VfpToSqlBulkCopy.Logging\VfpToSqlBulkCopy.Logging.csproj">
-      <Project>{433693d1-b947-4a8b-9ce2-d2c34fe89cf0}</Project>
-      <Name>VfpToSqlBulkCopy.Logging</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
